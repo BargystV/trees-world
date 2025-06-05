@@ -5,7 +5,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.bargystvelp.logic.biome.Biome
-import com.bargystvelp.logic.biome.Forest
+import com.bargystvelp.logic.biome.Ecosystem
 
 class Main : ApplicationAdapter() {
     private lateinit var shapeRenderer: ShapeRenderer
@@ -14,8 +14,7 @@ class Main : ApplicationAdapter() {
 
     override fun create() {
         // Инициализация биома с размерами экрана
-        biome = Forest(width = Gdx.graphics.width, height = Gdx.graphics.height)
-//        biome = Forest(width = 100, height = 100)
+        biome = Ecosystem(width = Gdx.graphics.width, height = Gdx.graphics.height)
 
         // Создание рендерера для отрисовки клеток
         shapeRenderer = ShapeRenderer()

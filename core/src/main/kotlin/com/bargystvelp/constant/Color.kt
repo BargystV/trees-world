@@ -16,9 +16,6 @@ object Color {
     val STONE_Z8 = Color(0.42f, 0.42f, 0.42f, 1f)
     val STONE_Z9 = Color(0.45f, 0.45f, 0.45f, 1f)   // Светлый камень (пики, без снега)
 
-
-
-
     val WATER_Z0    = Color(0f, 0f, 0.2f, 1f)    // Очень тёмно-синий (глубина)
     val WATER_Z1    = Color(0f, 0f, 0.3f, 1f)
     val WATER_Z2    = Color(0f, 0f, 0.4f, 1f)
