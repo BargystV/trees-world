@@ -43,7 +43,9 @@ class Main : ApplicationAdapter() {
         val cells = biome.render()
         for (x in 0 until biome.size.width) {
             for (y in 0 until biome.size.height) {
-                shapeRenderer.color = cells[x][y].entity.color
+                val cell = cells[x][y]
+
+                shapeRenderer.color = cell.entity.getColor(cell.position)
                 shapeRenderer.rect(x.toFloat(), y.toFloat(), 1f, 1f)
             }
         }

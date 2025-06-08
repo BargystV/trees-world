@@ -9,6 +9,8 @@ abstract class Biome(
     val cells: Array<Array<Cell>> by lazy { create() }
 
     fun render(): Array<Array<Cell>> {
+        prepare()
+
         for (x in 0 until size.width) {
             for (y in 0 until size.height) {
                 cells[x][y].entity.render(position = cells[x][y].position, cells)
@@ -18,6 +20,13 @@ abstract class Biome(
         return cells
     }
 
+    private fun prepare() {
+        for (x in 0 until size.width) {
+            for (y in 0 until size.height) {
+                cells[x][y].entity.rendered = false
+            }
+        }
+    }
 
 
     protected abstract fun create(): Array<Array<Cell>>
