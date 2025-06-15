@@ -1,4 +1,4 @@
-package com.bargystvelp.logic.cell.common
+package com.bargystvelp.constant
 
 enum class Height(val value: Int) {
     HEIGHT_0(0),
@@ -22,4 +22,3 @@ enum class Height(val value: Int) {
         }
     }
 }
-

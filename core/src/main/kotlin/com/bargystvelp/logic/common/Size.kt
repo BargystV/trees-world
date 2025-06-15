@@ -1,4 +1,4 @@
-package com.bargystvelp.logic.cell.common
+package com.bargystvelp.logic.common
 
 class Size(
     val width: Int,
