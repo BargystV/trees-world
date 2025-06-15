@@ -5,6 +5,7 @@ import com.bargystvelp.Logger
 import com.bargystvelp.logic.common.Metabolism
 import com.bargystvelp.logic.common.Position
 import com.bargystvelp.logic.common.Size
+import com.bargystvelp.logic.common.isWithin
 import com.bargystvelp.logic.common.organismmanager.OrganismManager
 import com.bargystvelp.logic.ecosystem.metabolism.Photosynthesis
 
@@ -69,7 +70,7 @@ data class Organism(
     ): Position? {
         for (dir in DIRECTIONS) {
             val neighbor = Position(position.x + dir.x, position.y + dir.y)
-            if (isWithinBounds(neighbor, organismManager.biomeSize) &&
+            if (neighbor.isWithin(organismManager.biomeSize) &&
                 !isPositionOccupied(neighbor, organismManager.organisms, organismManager.organismBuffer.toAdd)
             ) {
                 return neighbor
@@ -78,10 +79,6 @@ data class Organism(
         return null
     }
 
-
-    fun isWithinBounds(pos: Position, biomeSize: Size): Boolean {
-        return pos.x in 0 until biomeSize.width && pos.y in 0 until biomeSize.height
-    }
 
     fun isPositionOccupied(
         position: Position,

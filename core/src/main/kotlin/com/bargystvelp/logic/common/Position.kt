@@ -7,3 +7,7 @@ data class Position(
     val y: Int,
     val height: Height = Height.Companion.defaultHeight()
 )
+
+fun Position.isWithin(size: Size): Boolean {
+    return x in 0 until size.width && y in 0 until size.height
+}
