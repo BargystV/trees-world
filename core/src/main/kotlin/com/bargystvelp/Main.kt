@@ -4,29 +4,27 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.bargystvelp.logic.common.Biome
-import com.bargystvelp.logic.ecosystem.EcosystemBiome
-import com.bargystvelp.logic.common.Size
+import com.bargystvelp.component.Genome
+import com.bargystvelp.component.Position
+import com.bargystvelp.util.Logger
 
 class Main : ApplicationAdapter() {
     private lateinit var shapeRenderer: ShapeRenderer
 
-    private lateinit var biome: Biome
+    private lateinit var world: World
+
+    private var renderCount: Int = 0
 
     override fun create() {
-        Logger.info("")
-
-        // Инициализация биома с размерами экрана
-        biome = EcosystemBiome(size = Size(width = Gdx.graphics.width, height = Gdx.graphics.height))
+        world = World(Size(width = Gdx.graphics.width, height = Gdx.graphics.height))
+        Logger.info(world.size.toString())
 
         // Создание рендерера для отрисовки клеток
         shapeRenderer = ShapeRenderer()
 
         // Инициализация камеры с размерами мира
-        CameraHandler.init(width = biome.size.width.toFloat(), height = biome.size.height.toFloat())
+        CameraHandler.init(width = world.size.width.toFloat(), height = world.size.height.toFloat())
     }
-
-    private var renderCount = 0
 
     override fun render() {
         renderCount++
@@ -40,16 +38,21 @@ class Main : ApplicationAdapter() {
 
         // ⏱ Замер начала тика
         val tickStart = System.nanoTime()
-        val organisms = biome.tick()
+        val entities = world.tick(delta = Gdx.graphics.deltaTime)
         val tickEnd = System.nanoTime()
 
         // ⏱ Замер начала рендера
         val renderStart = System.nanoTime()
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
-        organisms.values.forEach { organism ->
-            shapeRenderer.color = organism.color
-            shapeRenderer.rect(organism.position.x.toFloat(), organism.position.y.toFloat(), 1f, 1f)
+
+        entities.forEach { entity ->
+            val position = entity.get(Position::class.java) ?: return@forEach
+            val genome = entity.get(Genome::class.java) ?: return@forEach
+
+            shapeRenderer.color = genome.color
+            shapeRenderer.rect(position.x.toFloat(), position.y.toFloat(), 1f, 1f)
         }
+
         shapeRenderer.end()
         val renderEnd = System.nanoTime()
 
@@ -58,7 +61,7 @@ class Main : ApplicationAdapter() {
         val totalMs = (renderEnd - tickStart) / 1_000_000.0
 
         Logger.info(
-            "$renderCount Organisms: ${organisms.size} Tick: %.3f ms, Render: %.3f ms, Total: %.3f ms"
+            "$renderCount Organisms: ${entities.size} Tick: %.3f ms, Render: %.3f ms, Total: %.3f ms"
                 .format(tickMs, renderMs, totalMs)
         )
     }

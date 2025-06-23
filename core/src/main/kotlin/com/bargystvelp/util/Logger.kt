@@ -1,4 +1,4 @@
-package com.bargystvelp
+package com.bargystvelp.util
 
 object Logger {
 

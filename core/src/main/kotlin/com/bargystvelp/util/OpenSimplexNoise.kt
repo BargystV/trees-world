@@ -1,4 +1,4 @@
-package com.bargystvelp
+package com.bargystvelp.util
 
 /**
  * K.jpg's OpenSimplex 2, smooth variant ("SuperSimplex")
