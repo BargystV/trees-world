@@ -38,19 +38,22 @@ class Main : ApplicationAdapter() {
 
         // ⏱ Замер начала тика
         val tickStart = System.nanoTime()
-        val entities = world.tick(delta = Gdx.graphics.deltaTime)
+        world.tick(delta = Gdx.graphics.deltaTime)
         val tickEnd = System.nanoTime()
 
         // ⏱ Замер начала рендера
         val renderStart = System.nanoTime()
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled)
 
-        entities.forEach { entity ->
-            val position = entity.get(Position::class.java) ?: return@forEach
-            val genome = entity.get(Genome::class.java) ?: return@forEach
+        var entityCounter = 0
+        world.entityManager.forEachAlive { id ->
+            entityCounter++
+            shapeRenderer.color = world.genomeManager.getColor(id)
 
-            shapeRenderer.color = genome.color
-            shapeRenderer.rect(position.x.toFloat(), position.y.toFloat(), 1f, 1f)
+            val x = world.positionManager.getX(id)
+            val y = world.positionManager.getY(id)
+
+            shapeRenderer.rect(x.toFloat(), y.toFloat(), 1f, 1f)
         }
 
         shapeRenderer.end()
@@ -61,7 +64,7 @@ class Main : ApplicationAdapter() {
         val totalMs = (renderEnd - tickStart) / 1_000_000.0
 
         Logger.info(
-            "$renderCount Organisms: ${entities.size} Tick: %.3f ms, Render: %.3f ms, Total: %.3f ms"
+            "$renderCount Organisms: $entityCounter Tick: %.3f ms, Render: %.3f ms, Total: %.3f ms"
                 .format(tickMs, renderMs, totalMs)
         )
     }

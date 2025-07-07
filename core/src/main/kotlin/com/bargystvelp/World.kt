@@ -1,46 +1,32 @@
 package com.bargystvelp
 
 import com.bargystvelp.engine.GenomeEngine
-import com.bargystvelp.engine.ReproduceEngine
-import com.bargystvelp.engine.VitalityEngine
-import com.bargystvelp.component.Position
-import kotlin.random.Random
+import com.bargystvelp.util.Logger
 
 class World(val size: Size) {
-//    private val systems = listOf(VitalityEngine, GenomeEngine, ReproduceEngine)
-    private val systems = listOf(VitalityEngine)
-//    internal val entities = mutableListOf(createAdam())
-    internal val entities = createAdam()
+    private val capacity = size.height * size.width
 
-    fun tick(delta: Float): List<Entity> {
-        systems.forEach { it.tick(this, delta) }
+    private val engines = listOf(GenomeEngine)
 
-        return entities
+    val entityManager = EntityManager(capacity)
+    val positionManager = PositionManager(capacity)
+    val genomeManager = GenomeManager(capacity)
+
+
+    init {
+        repeat(1) {
+            val adam = entityManager.create()
+
+            Logger.info("adam: $adam")
+
+            positionManager.set(adam, size.width / 2, size.height / 2)
+            genomeManager.set(adam, ALL_COMMANDS.shuffledCopy())
+        }
     }
 
-//    private fun createAdam() = Factory.organism(
-////        Position(
-////            Random.nextInt(0, size.width),
-////            Random.nextInt(0, size.height)
-////        )
-//        Position(
-//            size.width / 2,
-//            size.height / 2
-//        )
-//    )
-
-    private fun createAdam(): MutableList<Entity> {
-        val list = mutableListOf<Entity>()
-
-        repeat(2000000) {
-            list.add(Factory.organism(
-                Position(
-                    Random.nextInt(0, size.width),
-                    Random.nextInt(0, size.height)
-                )
-            ))
+    fun tick(delta: Float) {
+        engines.forEach { engine ->
+            engine.tick(this, delta)
         }
-
-        return list
     }
 }
