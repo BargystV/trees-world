@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 buildscript {
   repositories {
     mavenCentral()
@@ -9,7 +11,7 @@ buildscript {
     maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
   }
   dependencies {
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
 
   }
 }
@@ -55,14 +57,14 @@ configure(subprojects) {
   compileJava {
     options.incremental = true
   }
-  compileKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-  compileTestKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-  
+  compileKotlin.compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+  compileTestKotlin.compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+
 }
 
 subprojects {
-  version = "$projectVersion"
-  ext.appName = 'SimulationOfLife'
+  version = "${Versions.project}"
+  ext.appName = 'simulation-of-life'
   repositories {
     mavenCentral()
     maven { url 'https://s01.oss.sonatype.org' }
@@ -74,4 +76,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'SimulationOfLife' + '-parent'
+eclipse.project.name = 'simulation-of-life' + '-parent'
