@@ -25,14 +25,7 @@ class Main : ApplicationAdapter() {
     }
 
     override fun render() {
-        // ► Отрисовываем ТОЛЬКО при «одном» нажатии пробела
-        if (!Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) return
-
 //        Logger.info("${renderCount++}")
-
-//        MeasureUtil.time("Tick") {
-            biome.tick(Gdx.graphics.deltaTime)
-//        }
 
 //        MeasureUtil.time("Render") {
             biome.renderer.begin()
@@ -46,6 +39,13 @@ class Main : ApplicationAdapter() {
             }
 
             biome.renderer.end()
+//        }
+
+
+        // ► Вычисляем ТОЛЬКО при «одном» нажатии пробела
+        if (!Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) return
+//        MeasureUtil.time("Tick") {
+        biome.tick(Gdx.graphics.deltaTime)
 //        }
     }
 
