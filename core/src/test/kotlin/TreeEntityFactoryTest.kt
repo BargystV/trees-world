@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Assertions.*
  *  ⚡ TreeEntityFactory‑test (v2, обход «с хвоста»)
  *
  *  Проверяем все публичные сценарии:
- *  1.  Порядок посещения «от нового к старому»;
+ *  1.  Порядок посещения «отнового к старому»;
  *  2.  «Новорождённые» видны только в следующем тике и идут первыми;
  *  3.  Удаление головы / хвоста / середины сохраняет порядок;
  *  4.  Удаление прямо во время обхода не ломает снимок;
@@ -49,7 +49,7 @@ class TreeEntityFactoryTest {
     /* ───────────────────── 1. порядок «с хвоста» ───────────────────── */
 
     @Test fun `creation order is reversed in iteration`() {
-        val created = (0..4).map { f.create() }            // 0,1,2,3,4
+        val created = (0..4).map { f.create() }            // 4,3,2,1,0
         log("after create", listOf(snapshotLog("curr")))
         assertEquals(created.reversed(), snapshot(),
             "ожидался обход от нового к старому")
