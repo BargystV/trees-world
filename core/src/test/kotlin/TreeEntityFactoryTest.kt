@@ -1,44 +1,36 @@
 @file:Suppress("RemoveRedundantQualifierName", "SpellCheckingInspection")
 
-package com.bargystvelp.biome.tree.entity
-
+import com.bargystvelp.biome.tree.entity.TreeEntityFactory
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 /**
- *  ⚡  TreeEntityFactory-test
+ *  ⚡ TreeEntityFactory‑test (v2, обход «с хвоста»)
  *
- *  Покрывает ВСЕ публичные сценарии работы:
- *  1.  Сохранение порядка рождения;
- *  2.  Отложенная активация «новорожденных»;
- *  3.  Удаление головы / хвоста / середины и сохранение порядка;
- *  4.  Удаление прямо во время обхода;
- *  5.  Переиспользование освобождённых id-шников;
- *  6.  Переполнение пула.
+ *  Проверяем все публичные сценарии:
+ *  1.  Порядок посещения «от нового к старому»;
+ *  2.  «Новорождённые» видны только в следующем тике и идут первыми;
+ *  3.  Удаление головы / хвоста / середины сохраняет порядок;
+ *  4.  Удаление прямо во время обхода не ломает снимок;
+ *  5.  Повторно выделенный id идёт первым в следующем тике;
+ *  6.  Переполнение пула бросает исключение.
  *
- *  Логи печатаются так, чтобы _одним взглядом_ увидеть,
- *  кто жив, кто родился, кого удалили и в каком порядке шёл обход.
- *
- *  Пример:
- *  ── tick#2 (iterate) ──
- *  → 0,1,2
- *      create 3
- *      destroy 1
- *  итог: [0,2]
+ *  Лог печатается так, чтобы одним взглядом увидеть порядок обхода
+ *  и текущее содержимое очереди.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TreeEntityFactoryTest {
 
-    /* ----------- настройки ----------- */
+    /* ---------- настройки ---------- */
 
-    private val CAP   = 10                       // ёмкость фабрики
+    private val CAP = 10
     private lateinit var f: TreeEntityFactory
 
-    /* ----------- утилиты логирования ----------- */
+    /* ---------- утилиты ---------- */
 
     private fun log(header: String, bodies: List<String> = emptyList()) {
         println("\n── $header ──")
-        bodies.forEach { println(it) }
+        bodies.forEach(::println)
     }
 
     private fun snapshot(): List<Int> {
@@ -50,61 +42,64 @@ class TreeEntityFactoryTest {
     private fun snapshotLog(tag: String) =
         "$tag: ${snapshot().joinToString(prefix = "[", postfix = "]")}"
 
-    /* ============================================ */
+    /* ---------- lifecycle ---------- */
 
     @BeforeEach fun setup() { f = TreeEntityFactory(CAP) }
 
-    /* ---------- 1. порядок рождения ---------- */
+    /* ───────────────────── 1. порядок «с хвоста» ───────────────────── */
 
-    @Test fun `creation order is preserved`() {
-        val created = (0..4).map { f.create() }                        // 0,1,2,3,4
+    @Test fun `creation order is reversed in iteration`() {
+        val created = (0..4).map { f.create() }            // 0,1,2,3,4
         log("after create", listOf(snapshotLog("curr")))
-        assertEquals(created, snapshot(), "порядок рождения сломан")
+        assertEquals(created.reversed(), snapshot(),
+            "ожидался обход от нового к старому")
     }
 
-    /* ---------- 2. новорожденные отложены ---------- */
+    /* ───────────── 2. новорождённые → только в следующем тике ───────── */
 
-    @Test fun `newborn appear only next tick and впереди очереди`() {
-        repeat(3) { f.create() }                                       // 0,1,2
+    @Test fun `newborn appear next tick and first`() {
+        repeat(3) { f.create() }                           // 0,1,2
 
         // первый тик
         val visited1 = mutableListOf<Int>()
         f.forEachExist { id ->
             visited1 += id
-            if (id == 1) f.create()                                   // рождаем 3
+            if (id == 1) f.create()                       // рождаем 3
         }
         log("tick#1 (iterate)",
-            listOf("→ " + visited1.joinToString(),
+            listOf("→ ${visited1.joinToString()}",
                 snapshotLog("после тика")))
-        assertEquals(listOf(0,1,2), visited1, "новорожденный попал в текущий тик")
+        assertEquals(listOf(2,1,0), visited1,
+            "новорождённый не должен попасть в текущий тик")
 
         // второй тик
         val visited2 = mutableListOf<Int>()
         f.forEachExist { visited2 += it }
         log("tick#2 (iterate)",
-            listOf("→ " + visited2.joinToString(),
+            listOf("→ ${visited2.joinToString()}",
                 snapshotLog("после тика")))
-        assertEquals(listOf(3,0,1,2), visited2,
-            "новорожденный должен быть ПЕРЕД старожилами в следующем тике")
+        assertEquals(listOf(3,2,1,0), visited2,
+            "новорождённый должен идти первым в следующем тике")
     }
 
-    /* ---------- 3. удаление головы, хвоста, середины ---------- */
+    /* ───────────── 3. удаление головы, хвоста, середины ─────────────── */
 
     @Test fun `destroy keeps relative order`() {
-        val ids = (0..5).map { f.create() }                            // 0..5
-        f.destroy(ids[0])                                              // remove head (0)
-        f.destroy(ids[3])                                              // remove middle (3)
-        f.destroy(ids[5])                                              // remove tail (5)
+        val ids = (0..5).map { f.create() }                // 0..5
+        f.destroy(ids[0])                                  // head  (0)
+        f.destroy(ids[3])                                  // middle(3)
+        f.destroy(ids[5])                                  // tail  (5)
 
         val order = snapshot()
         log("after destroy head,mid,tail", listOf(snapshotLog("curr")))
-        assertEquals(listOf(1,2,4), order, "оставшиеся ids в неверном порядке")
+        assertEquals(listOf(4,2,1), order,
+            "порядок оставшихся ids нарушен")
     }
 
-    /* ---------- 4. удаление прямо во время обхода ---------- */
+    /* ───────────── 4. удаление прямо во время обхода ────────────────── */
 
     @Test fun `destroy during iteration does not break snapshot`() {
-        repeat(4) { f.create() }                                       // 0..3
+        repeat(4) { f.create() }                           // 0..3
 
         val visited = mutableListOf<Int>()
         f.forEachExist { id ->
@@ -112,30 +107,33 @@ class TreeEntityFactoryTest {
             if (id == 1) f.destroy(1)
             if (id == 2) f.destroy(2)
         }
-        log("tick (destroy in-loop)",
-            listOf("→ " + visited.joinToString(),
+        log("tick (destroy in‑loop)",
+            listOf("→ ${visited.joinToString()}",
                 snapshotLog("после тика")))
-        assertEquals(listOf(0,1,2,3), visited, "снимок должен быть фиксирован")
-        assertEquals(listOf(0,3), snapshot(), "после тика остались неверные id")
+        assertEquals(listOf(3,2,1,0), visited,
+            "снимок должен быть фиксирован")
+        assertEquals(listOf(3,0), snapshot(),
+            "остались неверные id")
     }
 
-    /* ---------- 5. переиспользование освобождённого id ---------- */
+    /* ───────────── 5. повторное выделение id ────────────────────────── */
 
-    @Test fun `reused id treated as newborn and идёт впереди`() {
-        val first = f.create()                                         // 0
-        val second = f.create()                                        // 1
+    @Test fun `reused id treated as newborn and is first next tick`() {
+        val first  = f.create()                            // 0
+        val second = f.create()                            // 1
         f.forEachExist { /* прогрев */ }
 
-        f.destroy(first)                                               // освободили 0
-        val new0 = f.create()                                          // вернулся 0
+        f.destroy(first)                                   // освободили 0
+        val new0 = f.create()                              // вернулся 0
 
         val order = mutableListOf<Int>()
         f.forEachExist { order += it }
-        log("reused id", listOf("→ " + order.joinToString()))
-        assertEquals(listOf(new0, second), order, "`reused` должен идти первым")
+        log("reused id", listOf("→ ${order.joinToString()}"))
+        assertEquals(listOf(new0, second), order,
+            "`reused` id должен идти первым")
     }
 
-    /* ---------- 6. переполнение пула ---------- */
+    /* ───────────── 6. переполнение пула ─────────────────────────────── */
 
     @Test fun `factory throws when capacity exceeded`() {
         repeat(CAP) { f.create() }
