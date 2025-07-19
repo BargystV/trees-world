@@ -1,4 +1,4 @@
-package com.bargystvelp.biome.tree.component
+package com.bargystvelp.world.tree.component
 
 import com.badlogic.gdx.graphics.Color
 import com.bargystvelp.common.AttrKey

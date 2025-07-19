@@ -1,13 +1,21 @@
-package com.bargystvelp.biome.tree.engine
+package com.bargystvelp.world.tree.engine
 
-import com.bargystvelp.biome.tree.GENOME_COMPONENT_KEY
-import com.bargystvelp.biome.tree.POSITION_COMPONENT_KEY
-import com.bargystvelp.biome.tree.component.*
-import com.bargystvelp.common.Biome
+import com.bargystvelp.world.tree.GENOME_COMPONENT_KEY
+import com.bargystvelp.world.tree.POSITION_COMPONENT_KEY
+import com.bargystvelp.common.World
 import com.bargystvelp.common.Color
 import com.bargystvelp.common.Component
 import com.bargystvelp.common.Engine
-import com.bargystvelp.logger.Logger
+import com.bargystvelp.world.tree.component.COMMAND_EMPTY
+import com.bargystvelp.world.tree.component.DOWN
+import com.bargystvelp.world.tree.component.EMPTY_COMMANDS
+import com.bargystvelp.world.tree.component.EMPTY_DIRECTIONS
+import com.bargystvelp.world.tree.component.EMPTY_ID
+import com.bargystvelp.world.tree.component.GenomeComponent
+import com.bargystvelp.world.tree.component.LEFT
+import com.bargystvelp.world.tree.component.PositionComponent
+import com.bargystvelp.world.tree.component.RIGHT
+import com.bargystvelp.world.tree.component.UP
 
 object GrowEngine : Engine() {
     private val DIRECTIONS = mapOf(
@@ -18,11 +26,11 @@ object GrowEngine : Engine() {
     )
 
 
-    override fun tick(biome: Biome, delta: Float) {
-        val positionComponent = biome.components[POSITION_COMPONENT_KEY] ?: return
-        val genomeComponent = biome.components[GENOME_COMPONENT_KEY] ?: return
+    override fun tick(world: World, delta: Float) {
+        val positionComponent = world.components[POSITION_COMPONENT_KEY] ?: return
+        val genomeComponent = world.components[GENOME_COMPONENT_KEY] ?: return
 
-        biome.entityFactory.forEachExist { id ->
+        world.entityFactory.forEachExist { id ->
             val commands = genomeComponent[GenomeComponent.COMMANDS, id]
             if (commands === EMPTY_COMMANDS) return@forEachExist
 
@@ -41,12 +49,12 @@ object GrowEngine : Engine() {
                 if (command == COMMAND_EMPTY) return@forEachIndexed
 
                 DIRECTIONS[direction]?.let { (dx, dy) ->
-                    val newX = wrap(x + dx, biome.biomeSize.width)
-                    val newY = clamp(y + dy, biome.biomeSize.height)
+                    val newX = wrap(x + dx, world.biomeSize.width)
+                    val newY = clamp(y + dy, world.biomeSize.height)
 
                     if (isOccupied(newX, newY, positionComponent)) return@forEachIndexed
 
-                    val child = biome.entityFactory.create()
+                    val child = world.entityFactory.create()
 //                    Logger.info("child: $child")
 
                     positionComponent[PositionComponent.ID_TO_POS, child] = PositionComponent.pack(newX, newY)

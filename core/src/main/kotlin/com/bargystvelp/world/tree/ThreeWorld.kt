@@ -1,29 +1,29 @@
-package com.bargystvelp.biome.tree
+package com.bargystvelp.world.tree
 
-import com.bargystvelp.biome.tree.component.COMMAND_EMPTY
-import com.bargystvelp.biome.tree.component.COMMAND_SIZE
-import com.bargystvelp.biome.tree.component.DIRECTIONS_SIZE
-import com.bargystvelp.biome.tree.component.GenomeComponent
-import com.bargystvelp.biome.tree.component.PositionComponent
-import com.bargystvelp.biome.tree.component.UP
-import com.bargystvelp.biome.tree.component.DOWN
-import com.bargystvelp.biome.tree.component.LEFT
-import com.bargystvelp.biome.tree.component.RIGHT
-import com.bargystvelp.biome.tree.component.START_COMMAND
-import com.bargystvelp.biome.tree.engine.GrowEngine
-import com.bargystvelp.biome.tree.entity.TreeEntityFactory
+import com.bargystvelp.world.tree.component.COMMAND_EMPTY
+import com.bargystvelp.world.tree.component.COMMAND_SIZE
+import com.bargystvelp.world.tree.component.DIRECTIONS_SIZE
+import com.bargystvelp.world.tree.component.GenomeComponent
+import com.bargystvelp.world.tree.component.PositionComponent
+import com.bargystvelp.world.tree.component.UP
+import com.bargystvelp.world.tree.component.DOWN
+import com.bargystvelp.world.tree.component.LEFT
+import com.bargystvelp.world.tree.component.RIGHT
+import com.bargystvelp.world.tree.component.START_COMMAND
+import com.bargystvelp.world.tree.engine.GrowEngine
+import com.bargystvelp.world.tree.entity.TreeEntityFactory
 import com.bargystvelp.common.*
+import com.bargystvelp.logger.Logger
+import java.util.Random
 
 const val POSITION_COMPONENT_KEY = "POSITION"
 const val GENOME_COMPONENT_KEY = "GENOME"
 
-class ThreeBiome(
+class ThreeWorld(
     windowSize: Size,
-//    cellSize: Size = Size(width = 100, height = 100),
-//    cellSize: Size = Size(width = 10, height = 10),
-    cellSize: Size = Size(width = 1, height = 1),
+    cellSize: Size = Size(width = 10, height = 10),
     biomeSize: Size = windowSize.div(cellSize),
-) : Biome(
+) : World(
     windowSize = windowSize,
     cellSize = cellSize,
     biomeSize = biomeSize,
@@ -81,39 +81,30 @@ class ThreeBiome(
 
 
     private fun createAdamCommands(seed: Long = System.currentTimeMillis()): Array<ByteArray> {
-        val random = java.util.Random(seed)
+        val random = Random(seed)
 
         val commands: Array<ByteArray> = Array(COMMAND_SIZE) {
             ByteArray(DIRECTIONS_SIZE) { COMMAND_EMPTY }
         }
 
-        for (cmd in 0 until COMMAND_SIZE) {
-            commands[cmd][LEFT] = random.nextInt(COMMAND_SIZE - 1).toByte()
-            commands[cmd][UP] = random.nextInt(COMMAND_SIZE - 1).toByte()
-            commands[cmd][RIGHT] = random.nextInt(COMMAND_SIZE - 1).toByte()
-            commands[cmd][DOWN] = random.nextInt(COMMAND_SIZE - 1).toByte()
-        }
-
-
         // Заполняем первую команду корректно
-//        commands[START_COMMAND.toInt()][UP] = random.nextInt(COMMAND_SIZE - 1).toByte()
-//        commands[START_COMMAND.toInt()][DOWN] = COMMAND_EMPTY
-//        commands[START_COMMAND.toInt()][LEFT] = random.nextInt(COMMAND_SIZE - 1).toByte()
-//        commands[START_COMMAND.toInt()][RIGHT] = random.nextInt(COMMAND_SIZE - 1).toByte()
-//
-//        for (cmd in 1 until COMMAND_SIZE) {
-//            for (dir in 0 until DIRECTIONS_SIZE) {
-//                // 50% шанс на пустую команду
-//                commands[cmd][dir] = random.nextInt(COMMAND_SIZE - 1).toByte()
-//                    if (random.nextBoolean()) {
-//                    random.nextInt(COMMAND_SIZE - 1).toByte()
-//                } else {
-//                    COMMAND_EMPTY
-//                }
-//
-////                Logger.info("cmd: $cmd dir: $dir command: ${commands[cmd][dir]}")
-//            }
-//        }
+        commands[START_COMMAND.toInt()][UP] = random.nextInt(COMMAND_SIZE - 1).toByte()
+        commands[START_COMMAND.toInt()][DOWN] = COMMAND_EMPTY
+        commands[START_COMMAND.toInt()][LEFT] = random.nextInt(COMMAND_SIZE - 1).toByte()
+        commands[START_COMMAND.toInt()][RIGHT] = random.nextInt(COMMAND_SIZE - 1).toByte()
+
+        for (cmd in 1 until COMMAND_SIZE) {
+            for (dir in 0 until DIRECTIONS_SIZE) {
+                // 50% шанс на пустую команду
+                commands[cmd][dir] = if (random.nextBoolean()) {
+                    random.nextInt(COMMAND_SIZE - 1).toByte()
+                } else {
+                    COMMAND_EMPTY
+                }
+
+                Logger.info("cmd: $cmd dir: $dir command: ${commands[cmd][dir]}")
+            }
+        }
 
         return commands
     }

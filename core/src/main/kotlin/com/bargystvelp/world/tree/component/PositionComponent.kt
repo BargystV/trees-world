@@ -1,4 +1,4 @@
-package com.bargystvelp.biome.tree.component
+package com.bargystvelp.world.tree.component
 
 import com.bargystvelp.common.AttrKey
 import com.bargystvelp.common.Component

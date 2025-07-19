@@ -1,6 +1,6 @@
 package com.bargystvelp.common
 
-abstract class Biome(
+abstract class World(
     val windowSize: Size,
     val cellSize: Size,
     val biomeSize: Size

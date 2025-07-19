@@ -1,6 +1,6 @@
 @file:Suppress("RemoveRedundantQualifierName", "SpellCheckingInspection")
 
-import com.bargystvelp.biome.tree.entity.TreeEntityFactory
+import com.bargystvelp.world.tree.entity.TreeEntityFactory
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 

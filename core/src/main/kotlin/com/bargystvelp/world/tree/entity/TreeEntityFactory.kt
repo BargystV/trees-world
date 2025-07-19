@@ -1,4 +1,4 @@
-package com.bargystvelp.biome.tree.entity
+package com.bargystvelp.world.tree.entity
 
 import com.bargystvelp.common.EntityFactory
 

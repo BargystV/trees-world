@@ -2,7 +2,9 @@
 
 package com.bargystvelp.biome.tree.component
 
-import com.bargystvelp.biome.tree.component.PositionComponent.Companion.pack
+import com.bargystvelp.world.tree.component.EMPTY_ID
+import com.bargystvelp.world.tree.component.PositionComponent
+import com.bargystvelp.world.tree.component.PositionComponent.Companion.pack
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 

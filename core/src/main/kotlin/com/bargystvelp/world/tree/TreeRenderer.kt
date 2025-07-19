@@ -1,4 +1,4 @@
-package com.bargystvelp.biome.tree
+package com.bargystvelp.world.tree
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -30,7 +30,7 @@ class TreeRenderer(
     private val spriteBatch = SpriteBatch()
 //    private val font = createBitmapFont()
 
-//    private var gridTexture: Texture = createGridTexture(biomeSize, cellSize)
+    private var gridTexture: Texture = createGridTexture(biomeSize, cellSize)
     private var cellsTexture: Texture = createCellsTexture()
 
     init {
@@ -72,13 +72,13 @@ class TreeRenderer(
     override fun end() {
         // Отрисовка сетки
         spriteBatch.color = Color.DARK_GRAY
-//        spriteBatch.draw(gridTexture, 0f, 0f)
+        spriteBatch.draw(gridTexture, 0f, 0f)
 
         spriteBatch.end()
     }
 
     override fun dispose() {
-//        gridTexture.dispose()
+        gridTexture.dispose()
         cellsTexture.dispose()
 //        font.dispose()
         spriteBatch.dispose()
