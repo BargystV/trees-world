@@ -1,23 +1,16 @@
 package com.bargystvelp.world.tree.engine
 
-import com.bargystvelp.world.tree.GENOME_COMPONENT_KEY
-import com.bargystvelp.world.tree.POSITION_COMPONENT_KEY
-import com.bargystvelp.common.World
-import com.bargystvelp.common.Color
 import com.bargystvelp.common.Component
 import com.bargystvelp.common.Engine
+import com.bargystvelp.common.World
+import com.bargystvelp.logger.Logger
+import com.bargystvelp.util.PositionUtils
+import com.bargystvelp.world.tree.GENOME_COMPONENT_KEY
+import com.bargystvelp.world.tree.POSITION_COMPONENT_KEY
 import com.bargystvelp.world.tree.command.CreateCommand
+import com.bargystvelp.world.tree.command.GrowCommand
 import com.bargystvelp.world.tree.command.GrowUpCommand
-import com.bargystvelp.world.tree.component.COMMAND_EMPTY
-import com.bargystvelp.world.tree.component.DOWN
-import com.bargystvelp.world.tree.component.EMPTY_COMMANDS
-import com.bargystvelp.world.tree.component.EMPTY_DIRECTIONS
-import com.bargystvelp.world.tree.component.EMPTY_ID
-import com.bargystvelp.world.tree.component.GenomeComponent
-import com.bargystvelp.world.tree.component.LEFT
-import com.bargystvelp.world.tree.component.PositionComponent
-import com.bargystvelp.world.tree.component.RIGHT
-import com.bargystvelp.world.tree.component.UP
+import com.bargystvelp.world.tree.component.*
 
 object GrowEngine : Engine() {
     private val DIRECTIONS = mapOf(
@@ -34,48 +27,52 @@ object GrowEngine : Engine() {
 
         world.entityFactory.forEachExist { id ->
             val commands = genomeComponent[GenomeComponent.COMMANDS, id]
-            if (commands === EMPTY_COMMANDS) return@forEachExist
+            val positions = positionComponent[PositionComponent.ID_TO_POS_LIST, id]
 
-            val commandNumber = genomeComponent[GenomeComponent.SEED_COMMAND, id]
-            val directions = commands[commandNumber.toInt()]
-            if (directions === EMPTY_DIRECTIONS) return@forEachExist
+            for (packed in positions) {
+                val commandNumber = genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packed]
+                if (commandNumber == COMMAND_EMPTY) return@forEachExist
 
-            val packed = positionComponent[PositionComponent.ID_TO_POS, id]
+                val directions = commands[commandNumber.toInt()]
+                if (directions === EMPTY_DIRECTIONS) return@forEachExist
 
-            val x = PositionComponent.unpackX(packed)
-            val y = PositionComponent.unpackY(packed)
+                val x = PositionUtils.unpackX(packed)
+                val y = PositionUtils.unpackY(packed)
 
-            var growUp = false
+                var growUp = false
 
-            directions.forEachIndexed { direction, command ->
-                if (command == COMMAND_EMPTY) return@forEachIndexed
+                directions.forEachIndexed { direction, command ->
+                    if (command == COMMAND_EMPTY) return@forEachIndexed
 
-                DIRECTIONS[direction]?.let { (dx, dy) ->
-                    val newX = wrap(x + dx, world.biomeSize.width)
-                    val newY = clamp(y + dy, world.biomeSize.height)
+                    DIRECTIONS[direction]?.let { (dx, dy) ->
+                        val newX = wrap(x + dx, world.biomeSize.width)
+                        val newY = clamp(y + dy, world.biomeSize.height)
 
-                    if (isOccupied(newX, newY, positionComponent)) return@forEachIndexed
+                        if (isOccupied(newX, newY, positionComponent)) return@forEachIndexed
 
-                    CreateCommand.execute(
-                        world = world,
-                        packedPosition = PositionComponent.pack(newX, newY),
-                        seedCommand = command,
-                        commands = commands
-                    )
+                        GrowCommand.execute(
+                            world = world,
+                            id = id,
+                            packedPosition = PositionUtils.pack(newX, newY),
+                            seedCommand = command,
+                        )
 
-                    growUp = true
+                        growUp = true
+                    }
                 }
-            }
 
-            if (growUp) {
-                GrowUpCommand.execute(world = world, id)
+                // TODO Если семечко не проросло потому что команды пустые то оно должно превратиться в дерево все равно
+                // TODO Однако если семечко не проросло потому что не хватило энергии - оно остается семечком
+                if (growUp) {
+                    GrowUpCommand.execute(world = world, packedPosition = packed)
+                }
             }
         }
     }
 
 
     private fun isOccupied(x: Int, y: Int, positionComponent: Component): Boolean {
-        return positionComponent[PositionComponent.POS_TO_ID, PositionComponent.pack(x, y)] != EMPTY_ID
+        return positionComponent[PositionComponent.POS_TO_ID, PositionUtils.pack(x, y)] != EMPTY_ID
     }
 
     /** Обёртка 0‥size-1 (тор). */

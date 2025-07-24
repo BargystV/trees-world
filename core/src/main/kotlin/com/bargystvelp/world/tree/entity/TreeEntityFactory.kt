@@ -7,19 +7,19 @@ private const val STATE_FREE: Byte = 0   // не используется
 private const val STATE_CURR: Byte = 1   // в основном списке (обрабатывается сейчас)
 private const val STATE_NEW:  Byte = 2   // создан в этом тике, будет первым в следующем
 
-class TreeEntityFactory(private val capacity: Int) : EntityFactory {
+class TreeEntityFactory(private val maxEntities: Int) : EntityFactory {
 
     /* -------- внутренние массивы -------- */
 
-    private val next = IntArray(capacity) { FREE }     // двусвязный список
-    private val prev = IntArray(capacity) { FREE }
+    private val next = IntArray(maxEntities) { FREE }     // двусвязный список
+    private val prev = IntArray(maxEntities) { FREE }
 
-    private val state = ByteArray(capacity) { STATE_FREE }
+    private val state = ByteArray(maxEntities) { STATE_FREE }
 
     /* -------- стек свободных id -------- */
 
-    private val free = IntArray(capacity) { (capacity - 1) - it }
-    private var freeTop = capacity                     // вершина стека
+    private val free = IntArray(maxEntities) { (maxEntities - 1) - it }
+    private var freeTop = maxEntities                     // вершина стека
 
     /* -------- текущий и «новорожденный» списки -------- */
 

@@ -2,11 +2,11 @@ package com.bargystvelp
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
-import com.bargystvelp.world.tree.ThreeWorld
+import com.badlogic.gdx.Input
+import com.bargystvelp.world.tree.TreeWorld
 import com.bargystvelp.common.World
 import com.bargystvelp.common.Size
 import com.bargystvelp.logger.Logger
-import com.bargystvelp.logger.MeasureUtil
 import com.bargystvelp.util.Randomizer
 
 class Main : ApplicationAdapter() {
@@ -17,7 +17,7 @@ class Main : ApplicationAdapter() {
     override fun create() {
         Randomizer.init()
 
-        world = ThreeWorld(Size(width = Gdx.graphics.width, height = Gdx.graphics.height))
+        world = TreeWorld(Size(width = Gdx.graphics.width, height = Gdx.graphics.height))
 
     }
 

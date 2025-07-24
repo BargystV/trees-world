@@ -25,6 +25,7 @@ dependencies {
     api("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation(kotlin("test"))
 
     implementation("com.github.BargystV:ai-math:main-SNAPSHOT")
     implementation("com.github.BargystV:logger:main-SNAPSHOT")

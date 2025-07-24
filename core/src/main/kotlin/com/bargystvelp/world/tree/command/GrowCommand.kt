@@ -8,23 +8,20 @@ import com.bargystvelp.world.tree.component.GenomeComponent
 import com.bargystvelp.world.tree.component.PositionComponent
 import com.bargystvelp.world.tree.component.START_COMMAND
 
-object CreateCommand {
+object GrowCommand {
     fun execute(
         world: World,
+        id: Int,
         packedPosition: Int,
-        commands: Array<ByteArray>,
         seedCommand: Byte = START_COMMAND,
         color: Color = com.bargystvelp.common.Color.WHITE
     ) {
-        val id = world.entityFactory.create()
-
         val positionComponent = world.components[POSITION_COMPONENT_KEY] ?: return
         val genomeComponent = world.components[GENOME_COMPONENT_KEY] ?: return
 
         positionComponent[PositionComponent.POS_TO_ID, packedPosition] = id
 
         genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packedPosition] = seedCommand
-        genomeComponent[GenomeComponent.COMMANDS, id] = commands
         genomeComponent[GenomeComponent.COLOR_AT_POS, packedPosition] = color
     }
 }

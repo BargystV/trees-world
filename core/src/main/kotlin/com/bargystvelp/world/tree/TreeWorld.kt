@@ -14,13 +14,14 @@ import com.bargystvelp.world.tree.engine.GrowEngine
 import com.bargystvelp.world.tree.entity.TreeEntityFactory
 import com.bargystvelp.common.*
 import com.bargystvelp.logger.Logger
+import com.bargystvelp.util.PositionUtils
 import com.bargystvelp.util.Randomizer
 import com.bargystvelp.world.tree.command.CreateCommand
 
 const val POSITION_COMPONENT_KEY = "POSITION"
 const val GENOME_COMPONENT_KEY = "GENOME"
 
-class ThreeWorld(
+class TreeWorld(
     windowSize: Size,
     cellSize: Size = Size(width = 10, height = 10),
     biomeSize: Size = windowSize.div(cellSize),
@@ -29,21 +30,21 @@ class ThreeWorld(
     cellSize = cellSize,
     biomeSize = biomeSize,
 ) {
-    private val capacity = biomeSize.height * biomeSize.width
+    private val maxEntities = biomeSize.width * 3
 
     override val renderer: Renderer = TreeRenderer(windowSize, biomeSize, cellSize)
     override val engines: List<Engine> = listOf(GrowEngine)
-    override val entityFactory: EntityFactory = TreeEntityFactory(capacity)
+    override val entityFactory: EntityFactory = TreeEntityFactory(maxEntities = maxEntities)
     override val components: Map<String, Component> = mapOf(
-        POSITION_COMPONENT_KEY to PositionComponent(width = biomeSize.width, height = biomeSize.height),
-        GENOME_COMPONENT_KEY to GenomeComponent(capacity),
+        POSITION_COMPONENT_KEY to PositionComponent(maxEntities = maxEntities, width = biomeSize.width, height = biomeSize.height),
+        GENOME_COMPONENT_KEY to GenomeComponent(maxEntities = maxEntities, width =  biomeSize.width, height = biomeSize.height),
     )
 
     init {
         repeat(1) {
             CreateCommand.execute(
                 world = this,
-                packedPosition = PositionComponent.pack(biomeSize.width.div(2), 0),
+                packedPosition = PositionUtils.pack(biomeSize.width.div(2), 0),
                 commands = createAdamCommands(),
             )
         }
@@ -62,14 +63,16 @@ class ThreeWorld(
         val positionComponent = components[POSITION_COMPONENT_KEY] ?: return
 
         entityFactory.forEachExist { id ->
-            val color = genomeComponent[GenomeComponent.COLOR, id]
-            val packed = positionComponent[PositionComponent.ID_TO_POS, id]
+            val positions = positionComponent[PositionComponent.ID_TO_POS_LIST, id] // IntArray
 
-            val x = PositionComponent.unpackX(packed)
-            val y = PositionComponent.unpackY(packed)
-
-            renderer.draw(x, y, color)
+            for (packed in positions) {
+                val x = PositionUtils.unpackX(packed)
+                val y = PositionUtils.unpackY(packed)
+                val color = genomeComponent[GenomeComponent.COLOR_AT_POS, packed]
+                renderer.draw(x, y, color)
+            }
         }
+
 
         renderer.end()
     }
