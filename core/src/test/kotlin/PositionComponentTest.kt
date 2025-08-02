@@ -18,9 +18,14 @@ class PositionComponentTest {
     private lateinit var pc: PositionComponent
 
     /* ─────────── helpers ─────────── */
+    /* snapshot каждой клетки, но ключ всегда pack(x,y) */
+    private fun snapshot() = IntArray(W * H) { idx ->
+        val x = idx % W
+        val y = idx / W
+        pc[PositionComponent.POS_TO_ID, PositionUtils.pack(x, y)]
+    }
 
-    private fun snapshot() = IntArray(W * H) { pos -> pc[PositionComponent.POS_TO_ID, pos] }
-
+    /* печать — то же вычисление pack  */
     private fun printBoard(b: IntArray) {
         val w = (CAP - 1).toString().length
         for (y in H - 1 downTo 0) {
@@ -29,6 +34,7 @@ class PositionComponentTest {
             })
         }
     }
+
 
     private inline fun withLog(step: String, act: () -> Unit) {
         val before = snapshot(); act(); val after = snapshot()
@@ -189,12 +195,22 @@ class PositionComponentTest {
     @Test
     fun invalidOperationsThrow() {
         assertAll(
-            { assertThrows(IllegalArgumentException::class.java) { pc[PositionComponent.POS_TO_ID, PositionUtils.pack(-1, 0)] = 0 } },
-            { assertThrows(IllegalArgumentException::class.java) { pc[PositionComponent.POS_TO_ID, PositionUtils.pack(0, H)]  = 0 } },
-            { assertThrows(IllegalArgumentException::class.java) { pc[PositionComponent.POS_TO_ID, PositionUtils.pack(0, 0)]  = -1 } },
-            { assertThrows(IllegalArgumentException::class.java) { pc[PositionComponent.POS_TO_ID, PositionUtils.pack(0, 0)]  = CAP } }
+            /* 1. координата –1 */
+            { assertThrows(IllegalArgumentException::class.java) {
+                pc[PositionComponent.POS_TO_ID, PositionUtils.pack(-1, 0)] = 0
+            } },
+            /* 2. координата y == H */
+            { assertThrows(IllegalArgumentException::class.java) {
+                pc[PositionComponent.POS_TO_ID, PositionUtils.pack(0, H)]  = 0
+            } },
+            /* 3. id >= maxEntities */
+            { assertThrows(IllegalArgumentException::class.java) {
+                pc[PositionComponent.POS_TO_ID, PositionUtils.pack(0, 0)]  = CAP
+            } }
+            /* передача EMPTY_ID (-1) — валидное удаление ⇒ исключения нет */
         )
     }
+
 
     /* ====================================================================== */
     /* 9. идемпотентность                                                     */
@@ -210,5 +226,23 @@ class PositionComponentTest {
         }
         assertEquals(id, pc[PositionComponent.POS_TO_ID, p])
         assertArrayEquals(intArrayOf(p), pc[PositionComponent.ID_TO_POS_LIST, id])
+    }
+
+    /* ====================================================================== */
+    /* 10. удаление клетки                                                    */
+    /* ====================================================================== */
+
+    @Test
+    fun removePositionViaPosToId() {
+        val id = 0
+        val p  = PositionUtils.pack(2, 2)
+
+        pc[PositionComponent.POS_TO_ID, p] = id     // разместили
+        withLog("remove pos id=$id") {
+            pc[PositionComponent.POS_TO_ID, p] = EMPTY_ID   // очистили
+        }
+
+        assertEquals(EMPTY_ID, pc[PositionComponent.POS_TO_ID, p])
+        assertTrue(pc[PositionComponent.ID_TO_POS_LIST, id].isEmpty())
     }
 }

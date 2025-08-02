@@ -4,18 +4,12 @@ import com.bargystvelp.common.AttrKey
 import com.bargystvelp.common.Component
 import com.bargystvelp.util.PositionUtils
 
-const val EMPTY_ID  = -1
-private const val NO_POS = -1                // sentinel для конца списка
+const val EMPTY_ID = -1
+private const val NO_POS = -1                     // sentinel for end-of-list
 
 /**
- * Хранит взаимо‑отображение:
- *
- * * **id → список позиций** (одно дерево ↔︎ несколько клеток)
- * * **позиция → id** (моментальный ответ «кто стоит в клетке»)
- *
- * Реализация на чистых примитивах: `IntArray` + односвязные списки.
- * Все операции, вызываемые внутри горячего цикла симуляции, работают за O(1)
- * и без дополнительных аллокаций.
+ * id ↔︎ positions (multi-pos per tree) storage on pure primitives.
+ * All hot-path ops are O(1) and alloc-free.
  */
 class PositionComponent(
     private val maxEntities: Int,
@@ -26,31 +20,34 @@ class PositionComponent(
     companion object {
         /** id → IntArray(packedPos) */
         val ID_TO_POS_LIST = AttrKey<Int, IntArray>(0)
-        /** packedPos → id */
+        /** packedPos → id (or EMPTY_ID) */
         val POS_TO_ID      = AttrKey<Int, Int>(1)
 
-        fun isOccupied(x: Int, y: Int, positionComponent: Component): Boolean =
-            positionComponent[PositionComponent.POS_TO_ID, PositionUtils.pack(x, y)] != EMPTY_ID
+        fun isOccupied(x: Int, y: Int, pc: Component): Boolean =
+            pc[POS_TO_ID, PositionUtils.pack(x, y)] != EMPTY_ID
     }
 
-    /* ─────────── внутреннее хранилище ─────────── */
+    /* ─────────── storage ─────────── */
 
-    private val gridSize = width * height           // кол‑во клеток на доске
+    private val gridSize = width * height
+    private val posToId  = IntArray(gridSize) { EMPTY_ID }   // packedPos → id
 
-    private val posToId  = IntArray(gridSize) { EMPTY_ID } // позиция → id
-
-    // внутренний связный список позиций дерева
+    // single-linked lists per tree
     private val nextPos  = IntArray(gridSize) { NO_POS }
     private val prevPos  = IntArray(gridSize) { NO_POS }
 
-    private val idHead   = IntArray(maxEntities) { NO_POS } // id → head‑idx
-    private val idCount  = IntArray(maxEntities)            // id → размер списка
+    private val idHead   = IntArray(maxEntities) { NO_POS }  // id → head idx
+    private val idCount  = IntArray(maxEntities)             // id → list size
 
-    /* ───────────── Component API ───────────── */
+    /* ─────────── Component API ─────────── */
 
     @Suppress("UNCHECKED_CAST")
     override fun <K, V : Any> set(type: AttrKey<K, V>, key: K, value: V) = when (type) {
-        POS_TO_ID      -> addPosition(id = value as Int, packed = key as Int)
+        POS_TO_ID -> {
+            val packed  = key as Int
+            val id      = value as Int
+            if (id == EMPTY_ID) removePosition(packed) else addPosition(id, packed)
+        }
         ID_TO_POS_LIST -> replacePositions(id = key as Int, newList = value as IntArray)
         else           -> error("Unsupported AttrKey")
     }
@@ -62,40 +59,39 @@ class PositionComponent(
         else           -> error("Unsupported AttrKey")
     }
 
-    /* ────────── базовые операции ────────── */
+    /* ─────────── core ops ─────────── */
 
-    /** Добавляет (или переназначает) клетку `packed` дереву `id`. */
+    /** id ⇢ packedPos (add / re-assign). */
     private fun addPosition(id: Int, packed: Int) {
-        validateId(id)
-        validatePackedForWrite(packed)
-
-        val idx      = PositionUtils.idx(packed, width)
-        val occupant = posToId[idx]
-
-        // если клетка уже принадлежит нужному id — ничего делать не надо
-        if (occupant == id) return
-
-        // если занята – отцепляем от старого списка
-        if (occupant != EMPTY_ID) unlinkPosition(occupant, idx)
-
+        validateId(id); validatePackedForWrite(packed)
+        val idx = PositionUtils.idx(packed, width)
+        val old = posToId[idx]
+        if (old == id) return                   // already ours
+        if (old != EMPTY_ID) unlinkPosition(old, idx)
         linkPosition(id, idx)
     }
 
-    /** Заменяет всё тело дерева `id` новым списком позиций. */
+    /** packedPos ⇢ EMPTY_ID.  No-op if already empty. */
+    private fun removePosition(packed: Int) {
+        validatePackedForWrite(packed)
+        val idx = PositionUtils.idx(packed, width)
+        val owner = posToId[idx]
+        if (owner != EMPTY_ID) unlinkPosition(owner, idx)
+    }
+
+    /** Replace whole body of tree `id`. */
     private fun replacePositions(id: Int, newList: IntArray) {
         validateId(id)
-
-        // проверка новых позиций (границы + дубликаты)
+        // validate new cells & duplicates
         if (newList.isNotEmpty()) {
             val seen = HashSet<Int>(newList.size * 2)
-            for (packed in newList) {
-                validatePackedForWrite(packed)
-                if (!seen.add(packed))
-                    throw IllegalArgumentException("duplicate packed position: $packed")
+            for (p in newList) {
+                validatePackedForWrite(p)
+                require(seen.add(p)) { "duplicate packed position: $p" }
             }
         }
 
-        // удалить старые
+        // clear old
         var p = idHead[id]
         while (p != NO_POS) {
             val nxt = nextPos[p]
@@ -107,16 +103,16 @@ class PositionComponent(
         idHead[id]  = NO_POS
         idCount[id] = 0
 
-        // добавить новые
-        for (packed in newList) addPosition(id, packed)
+        // add new
+        for (p in newList) addPosition(id, p)
     }
 
-    /** Возвращает packed‑позиции дерева `id` (новый массив). */
+    /** Packed positions of tree `id` (returns new array). */
     private fun positionsOf(id: Int): IntArray {
         validateId(id)
         val out = IntArray(idCount[id])
-        var i   = 0
-        var p   = idHead[id]
+        var i = 0
+        var p = idHead[id]
         while (p != NO_POS) {
             out[i++] = PositionUtils.pack(p % width, p / width)
             p = nextPos[p]
@@ -124,21 +120,15 @@ class PositionComponent(
         return out
     }
 
-    /**
-     * id в клетке `packed` или EMPTY_ID, если клетка свободна **или лежит
-     * за пределами доски**.  Чтение «за борт» безопасно для удобства тестов
-     * и визуализации — это операция только на чтение, не влияющая на данные.
-     */
+    /** id at cell or EMPTY_ID (out-of-board safe). */
     private fun getIdAtPacked(packed: Int): Int {
         val x = PositionUtils.unpackX(packed)
         val y = PositionUtils.unpackY(packed)
         if (x !in 0 until width || y !in 0 until height) return EMPTY_ID
-
-        val idx = PositionUtils.idx(packed, width)
-        return posToId[idx]
+        return posToId[PositionUtils.idx(packed, width)]
     }
 
-    /* ──────── утилиты linked‑list ─────── */
+    /* ─────────── list helpers ─────────── */
 
     private fun unlinkPosition(ownerId: Int, idx: Int) {
         val prev = prevPos[idx]
@@ -147,39 +137,30 @@ class PositionComponent(
         if (prev != NO_POS) nextPos[prev] = next else idHead[ownerId] = next
         if (next != NO_POS) prevPos[next] = prev
 
-        posToId[idx]  = EMPTY_ID
-        nextPos[idx]  = NO_POS
-        prevPos[idx]  = NO_POS
+        posToId[idx] = EMPTY_ID
+        nextPos[idx] = NO_POS
+        prevPos[idx] = NO_POS
         idCount[ownerId]--
     }
 
     private fun linkPosition(id: Int, idx: Int) {
-        val head      = idHead[id]
-
-        posToId[idx]  = id
-        prevPos[idx]  = NO_POS
-        nextPos[idx]  = head
+        val head = idHead[id]
+        posToId[idx] = id
+        prevPos[idx] = NO_POS
+        nextPos[idx] = head
         if (head != NO_POS) prevPos[head] = idx
-
-        idHead[id]    = idx
+        idHead[id] = idx
         idCount[id]++
     }
 
-    /* ──────────── валидация данных ──────────── */
+    /* ─────────── validation ─────────── */
 
-    private fun validateId(id: Int) {
+    private fun validateId(id: Int) =
         require(id in 0 until maxEntities) { "id $id out of range [0, ${maxEntities - 1}]" }
-    }
 
-    /**
-     * Строгая проверка для **записывающих** операций (`set`, `replace`).
-     * Для чтения мы разрешаем выходить за границы, просто возвращая EMPTY_ID.
-     */
     private fun validatePackedForWrite(packed: Int) {
         val x = PositionUtils.unpackX(packed)
         val y = PositionUtils.unpackY(packed)
-        require(x in 0 until width && y in 0 until height) {
-            "packed position out of board: x=$x, y=$y"
-        }
+        require(x in 0 until width && y in 0 until height) { "packed position out of board: x=$x, y=$y" }
     }
 }
