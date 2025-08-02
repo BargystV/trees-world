@@ -2,15 +2,12 @@ package com.bargystvelp.world.tree.engine
 
 import com.bargystvelp.common.Engine
 import com.bargystvelp.common.World
-import com.bargystvelp.logger.Logger
 import com.bargystvelp.util.PositionUtils
-import com.bargystvelp.world.tree.ENERGY_COMPONENT_KEY
 import com.bargystvelp.world.tree.GENOME_COMPONENT_KEY
 import com.bargystvelp.world.tree.POSITION_COMPONENT_KEY
 import com.bargystvelp.world.tree.command.PhotosynthesisCommand
 import com.bargystvelp.world.tree.component.COMMAND_EMPTY
 import com.bargystvelp.world.tree.component.EMPTY_ID
-import com.bargystvelp.world.tree.component.EnergyComponent
 import com.bargystvelp.world.tree.component.GenomeComponent
 import com.bargystvelp.world.tree.component.PositionComponent
 

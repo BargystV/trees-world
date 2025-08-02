@@ -17,13 +17,15 @@ import com.bargystvelp.logger.Logger
 import com.bargystvelp.util.PositionUtils
 import com.bargystvelp.util.Randomizer
 import com.bargystvelp.world.tree.command.CreateCommand
+import com.bargystvelp.world.tree.component.AgeComponent
 import com.bargystvelp.world.tree.component.EnergyComponent
 import com.bargystvelp.world.tree.engine.PhotosynthesisEngine
-import com.bargystvelp.world.tree.engine.RespirationEngine
+import com.bargystvelp.world.tree.engine.MortalEngine
 
-const val POSITION_COMPONENT_KEY = "POSITION"
-const val GENOME_COMPONENT_KEY = "GENOME"
-const val ENERGY_COMPONENT_KEY = "ENERGY"
+const val POSITION_COMPONENT_KEY    = "POSITION"
+const val GENOME_COMPONENT_KEY      = "GENOME"
+const val ENERGY_COMPONENT_KEY      = "ENERGY"
+const val AGE_COMPONENT_KEY         = "AGE"
 
 class TreeWorld(
     windowSize: Size,
@@ -37,12 +39,13 @@ class TreeWorld(
     private val maxEntities = biomeSize.width * 3
 
     override val renderer: Renderer = TreeRenderer(windowSize, biomeSize, cellSize)
-    override val engines: List<Engine> = listOf(PhotosynthesisEngine, RespirationEngine, GrowEngine)
+    override val engines: List<Engine> = listOf(PhotosynthesisEngine, MortalEngine, GrowEngine)
     override val entityFactory: EntityFactory = TreeEntityFactory(maxEntities = maxEntities)
     override val components: Map<String, Component> = mapOf(
         POSITION_COMPONENT_KEY to PositionComponent(maxEntities = maxEntities, width = biomeSize.width, height = biomeSize.height),
         GENOME_COMPONENT_KEY to GenomeComponent(maxEntities = maxEntities, width =  biomeSize.width, height = biomeSize.height),
         ENERGY_COMPONENT_KEY to EnergyComponent(maxEntities = maxEntities),
+        AGE_COMPONENT_KEY to AgeComponent(maxEntities = maxEntities),
     )
 
     init {
@@ -60,10 +63,10 @@ class TreeWorld(
             engine.tick(this, delta)
         }
 
-//        entityFactory.forEachExist { id ->
-//            val energy = components[ENERGY_COMPONENT_KEY]?.get(EnergyComponent.ENERGY, id)
-//            Logger.info("id: $id energy: $energy")
-//        }
+        entityFactory.forEachExist { id ->
+            val energy = components[ENERGY_COMPONENT_KEY]?.get(EnergyComponent.ENERGY, id)
+            Logger.info("id: $id energy: $energy")
+        }
     }
 
     override fun render(delta: Float) {
