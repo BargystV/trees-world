@@ -16,6 +16,7 @@ import com.bargystvelp.world.tree.component.EnergyComponent
 import com.bargystvelp.world.tree.component.GenomeComponent
 import com.bargystvelp.world.tree.component.MIN_AGE
 import com.bargystvelp.world.tree.component.PositionComponent
+import com.bargystvelp.world.tree.component.START_COMMAND
 
 object DieCommand {
 
@@ -41,6 +42,7 @@ object DieCommand {
 
                 // наследуем геном
                 genomeComponent[GenomeComponent.COMMANDS, newId] = parentGenome
+                genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packedPos] = START_COMMAND
 
                 // стартовые параметры нового дерева
                 energyComponent[EnergyComponent.ENERGY, newId] = DEFAULT_ENERGY
