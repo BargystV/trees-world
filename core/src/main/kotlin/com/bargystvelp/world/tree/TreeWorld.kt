@@ -116,9 +116,15 @@ class TreeWorld(
         }
 
         for (cmd in 0 until COMMAND_SIZE) {
-            for (dir in 0 until DIRECTIONS_SIZE) {
-                Logger.info("cmd: $cmd dir: $dir command: ${commands[cmd][dir]}")
-            }
+            val dirCommands = commands[cmd]
+            val formatted = dirCommands.joinToString(
+                separator = ", ",
+                transform = { value ->
+                    if (value == COMMAND_EMPTY) "  ."
+                    else String.format("%3d", value)
+                }
+            )
+            Logger.info("cmd %02d: [%s ]".format(cmd, formatted))
         }
 
         return commands
