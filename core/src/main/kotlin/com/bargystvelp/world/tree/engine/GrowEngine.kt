@@ -1,16 +1,13 @@
 package com.bargystvelp.world.tree.engine
 
-import com.bargystvelp.common.Component
 import com.bargystvelp.common.Engine
 import com.bargystvelp.common.World
-import com.bargystvelp.logger.Logger
 import com.bargystvelp.util.PositionUtils
 import com.bargystvelp.world.tree.ENERGY_COMPONENT_KEY
 import com.bargystvelp.world.tree.GENOME_COMPONENT_KEY
 import com.bargystvelp.world.tree.POSITION_COMPONENT_KEY
-import com.bargystvelp.world.tree.command.CreateCommand
 import com.bargystvelp.world.tree.command.GrowCommand
-import com.bargystvelp.world.tree.command.GrowUpCommand
+import com.bargystvelp.world.tree.command.SeedToWoodCommand
 import com.bargystvelp.world.tree.component.*
 
 object GrowEngine : Engine() {
@@ -28,6 +25,8 @@ object GrowEngine : Engine() {
         val energyComponent = world.components[ENERGY_COMPONENT_KEY] ?: return
 
         world.entityFactory.forEachExist { id ->
+//            if (id != 0) return@forEachExist
+
             val commands = genomeComponent[GenomeComponent.COMMANDS, id]
             val positions = positionComponent[PositionComponent.ID_TO_POS_LIST, id]
 
@@ -35,15 +34,18 @@ object GrowEngine : Engine() {
 
             for (packed in positions) {
                 val commandNumber = genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packed]
-                if (commandNumber == COMMAND_EMPTY) return@forEachExist
+                if (commandNumber == COMMAND_WOOD || commandNumber == COMMAND_FALL) return@forEachExist
 
                 val directions = commands[commandNumber.toInt()]
-                if (directions === EMPTY_DIRECTIONS) return@forEachExist
+                if (directions === EMPTY_DIRECTIONS) {
+                    SeedToWoodCommand.execute(world = world, packedPosition = packed)
+                    return@forEachExist
+                }
 
                 val x = PositionUtils.unpackX(packed)
                 val y = PositionUtils.unpackY(packed)
 
-                var growUp = false
+                var transformToWood = false
 
                 directions.forEachIndexed { direction, command ->
                     if (command == COMMAND_EMPTY) return@forEachIndexed
@@ -62,14 +64,12 @@ object GrowEngine : Engine() {
                             seedCommand = command,
                         )
 
-                        growUp = true
+                        transformToWood = true
                     }
                 }
 
-                // TODO Если семечко не проросло потому что команды пустые то оно должно превратиться в дерево все равно
-                // TODO Однако если семечко не проросло потому что не хватило энергии - оно остается семечком
-                if (growUp) {
-                    GrowUpCommand.execute(world = world, packedPosition = packed)
+                if (transformToWood) {
+                    SeedToWoodCommand.execute(world = world, packedPosition = packed)
                 }
             }
         }

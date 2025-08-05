@@ -9,6 +9,7 @@ import com.bargystvelp.world.tree.command.AgeUpCommand
 import com.bargystvelp.world.tree.command.DieCommand
 import com.bargystvelp.world.tree.command.EnergySpendCommand
 import com.bargystvelp.world.tree.component.COMMAND_EMPTY
+import com.bargystvelp.world.tree.component.COMMAND_WOOD
 import com.bargystvelp.world.tree.component.GenomeComponent
 import com.bargystvelp.world.tree.component.MAX_AGE
 import com.bargystvelp.world.tree.component.PositionComponent
@@ -23,6 +24,8 @@ object MortalEngine : Engine() {
         val genomeComponent     = world.components[GENOME_COMPONENT_KEY]    ?: return
 
         world.entityFactory.forEachExist { id ->
+//            if (id != 0) return@forEachExist
+
             if (!ageProcessing(world, id)) {
                 DieCommand.execute(world, id)
                 return@forEachExist
@@ -41,7 +44,7 @@ object MortalEngine : Engine() {
         val cells = positionComponent[PositionComponent.ID_TO_POS_LIST, id]
         cells.forEach { packedPos ->
             // семечко не тратит энергию
-            if (genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packedPos] == COMMAND_EMPTY) {
+            if (genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packedPos] == COMMAND_WOOD) {
                 energyCost += WOOD_COST
             }
         }

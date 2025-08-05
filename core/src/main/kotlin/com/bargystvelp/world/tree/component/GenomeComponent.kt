@@ -9,6 +9,9 @@ import com.bargystvelp.util.PositionUtils
 const val DIRECTIONS_SIZE = 4
 const val COMMAND_SIZE    = 16
 const val START_COMMAND: Byte = 0
+
+const val COMMAND_WOOD: Byte = 28
+const val COMMAND_FALL: Byte = 29
 const val COMMAND_EMPTY: Byte = 30
 
 const val LEFT: Int = 0
@@ -56,7 +59,7 @@ class GenomeComponent(
     override fun <K, V : Any> get(type: AttrKey<K, V>, key: K): V =
         when (type) {
             SEED_COMMAND_AT_POS -> seeds[PositionUtils.idx(key as Int, width)]  as V
-            COMMANDS            -> commands[key as Int]             as V
+            COMMANDS            -> commands[key as Int]                                  as V
             COLOR_AT_POS        -> colors[PositionUtils.idx(key as Int, width)] as V
             else                -> error("bad AttrKey for GenomeComponent")
         }
