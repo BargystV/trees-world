@@ -7,6 +7,7 @@ import com.bargystvelp.world.tree.TreeWorld
 import com.bargystvelp.common.World
 import com.bargystvelp.common.Size
 import com.bargystvelp.logger.Logger
+import com.bargystvelp.logger.MeasureUtil
 import com.bargystvelp.util.Randomizer
 
 class Main : ApplicationAdapter() {
@@ -18,7 +19,6 @@ class Main : ApplicationAdapter() {
         Randomizer.init()
 
         world = TreeWorld(Size(width = Gdx.graphics.width, height = Gdx.graphics.height))
-
     }
 
     override fun render() {

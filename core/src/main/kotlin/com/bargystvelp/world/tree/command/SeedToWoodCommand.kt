@@ -19,6 +19,6 @@ object SeedToWoodCommand {
         val x = PositionUtils.unpackX(packedPosition)
         val y = PositionUtils.unpackY(packedPosition)
 
-        Logger.info("x: $x y: $y")
+//        Logger.info("x: $x y: $y")
     }
 }

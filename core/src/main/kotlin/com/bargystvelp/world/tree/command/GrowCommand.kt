@@ -35,6 +35,6 @@ object GrowCommand {
         val x = PositionUtils.unpackX(packedPosition)
         val y = PositionUtils.unpackY(packedPosition)
 
-        Logger.info("id: $id x: $x y: $y")
+//        Logger.info("id: $id x: $x y: $y")
     }
 }
