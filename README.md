@@ -1,33 +1,124 @@
-# SimulationOfLife
+# Simulation of Life
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+Симуляция жизни деревьев на основе **ECS (Entity Component System)** архитектуры, написанная на Kotlin с использованием LibGDX.
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+Деревья растут, фотосинтезируют, стареют, умирают и оставляют семена с унаследованным (и мутировавшим) геномом. Со временем популяция эволюционирует — выживают те геномы, которые эффективнее захватывают свет.
 
-## Platforms
+---
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+## Скриншоты
 
-## Gradle
+![Симуляция 1](screenshots/img.png)
+![Симуляция 2](screenshots/img_1.png)
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+---
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+## Технологии
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+| Компонент | Версия |
+|-----------|--------|
+| Kotlin | 2.1.0 |
+| LibGDX | 1.13.1 |
+| JDK | 17 |
+| Gradle (Kotlin DSL) | — |
+| Backend | LWJGL3 |
+
+---
+
+## Архитектура
+
+Проект построен на **Data-Oriented ECS** с несколькими ключевыми принципами:
+
+- **Компоненты** — плоские массивы (`IntArray`, `ByteArray`), индексируемые по entity ID или packed-позиции. Никаких аллокаций в горячем пути.
+- **Движки** — stateless singleton-объекты. Каждый тик: `Photosynthesis → Mortal → Fall → Grow`.
+- **Команды** — stateless объекты, которые мутируют компоненты (паттерн Command).
+- **EntityFactory** — linked list + стек свободных ID, O(1) создание и уничтожение.
+
+```
+World
+ ├── Engines            (PhotosynthesisEngine, MortalEngine, FallEngine, GrowEngine)
+ ├── Components         (Position, Genome, Energy, Age)
+ ├── EntityFactory      (TreeEntityFactory)
+ └── Renderer           (TreeRenderer → Pixmap → Texture)
+```
+
+---
+
+## Механика симуляции
+
+### Геном
+
+Каждое дерево несёт таблицу команд: **16 строк × 4 направления** (лево, вверх, право, вниз). В каждой клетке хранится индекс команды, которая запускается при прорастании. Значение `0` означает «не расти в это направление».
+
+Специальные маркеры клеток:
+
+| Константа | Значение | Смысл |
+|-----------|----------|-------|
+| `START_COMMAND` | 0 | Начальная команда семени |
+| `COMMAND_WOOD` | 28 | Клетка древесины |
+| `COMMAND_FALL` | 29 | Падающее семя |
+| `COMMAND_EMPTY` | 30 | Пустая клетка |
+
+### Рост (GrowEngine)
+
+Каждый тик каждая активная клетка-семя читает свою строку команд и пытается вырасти в свободные соседние клетки. Стоимость роста — **18 единиц энергии** на клетку. После роста клетка превращается в древесину.
+
+### Фотосинтез (PhotosynthesisEngine)
+
+Каждая клетка-древесина генерирует энергию пропорционально высоте (`y + 1`) и тени (до 3 уровней выше). Семена тень создают, но сами энергию не генерируют.
+
+### Смерть и семена (MortalEngine + DieCommand)
+
+Дерево умирает от старости (`MAX_AGE = 100`) или от нехватки энергии (расход — **4 единицы** на клетку древесины в тик). При смерти каждая клетка-семя порождает новую сущность с **мутированным геномом** (вероятность мутации байта ~3%) и **мутированным цветом** (±3% на канал).
+
+### Гравитация (FallEngine)
+
+Семена, помеченные `COMMAND_FALL`, падают вниз. При столкновении с занятой клеткой — уничтожаются. При достижении земли (Y=0) переходят в `START_COMMAND` и начинают расти.
+
+---
+
+## Структура модулей
+
+```
+core/       — вся логика симуляции (компоненты, движки, команды, рендер)
+lwjgl3/     — десктопный лаунчер (LWJGL3 backend)
+buildSrc/   — централизованные версии зависимостей (Versions.kt)
+```
+
+---
+
+## Запуск
+
+```bash
+# Клонировать репозиторий
+git clone <url>
+cd simulation-of-life
+
+# Запустить десктопную версию
+./gradlew lwjgl3:run
+```
+
+**Требования:** JDK 17+
+
+---
+
+## Управление
+
+| Клавиша | Действие |
+|---------|----------|
+| `W` / `A` / `S` / `D` | Панорамирование камеры |
+| `Q` | Уменьшить зум |
+| `E` | Увеличить зум |
+
+---
+
+## Производительность
+
+| Операция | Сложность |
+|----------|-----------|
+| Создание / уничтожение сущности | O(1) |
+| Поиск сущности по позиции | O(1) |
+| Итерация по сущностям | O(n) |
+| Итерация по клеткам сущности | O(cells) |
+| Фотосинтез с тенью | O(cells × 3) |
+| Рост | O(cells × 4) |
