@@ -22,6 +22,7 @@ object CreateCommand {
      * @param commands       таблица команд генома
      * @param seedCommand    начальная команда семени (по умолчанию START_COMMAND)
      * @param color          начальный цвет клетки (по умолчанию WHITE)
+     * @param baseColor      генетический цвет сущности — наследуется потомками (по умолчанию PHOTOSYNTHESIS)
      * @param energy         начальная энергия (по умолчанию DEFAULT_ENERGY)
      */
     fun execute(
@@ -30,6 +31,7 @@ object CreateCommand {
         commands: Array<ByteArray>,
         seedCommand: Byte = START_COMMAND,
         color: Color = com.bargystvelp.common.Color.WHITE,
+        baseColor: Color = com.bargystvelp.common.Color.PHOTOSYNTHESIS,
         energy: Int = DEFAULT_ENERGY
     ) {
         val id = world.entityFactory.create()
@@ -44,6 +46,7 @@ object CreateCommand {
         genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packedPosition] = seedCommand
         genomeComponent[GenomeComponent.COMMANDS, id] = commands
         genomeComponent[GenomeComponent.COLOR_AT_POS, packedPosition] = color
+        genomeComponent[GenomeComponent.BASE_COLOR, id] = baseColor
 
         energyComponent[EnergyComponent.ENERGY, id] = energy
 

@@ -127,6 +127,7 @@ COMMAND_EMPTY = 30       // пустая/неактивная клетка
 - `Array<Color> colors[width*height]` — цвет рендера в каждой клетке
 - `Array<Array<ByteArray>> commands[maxEntities]` — таблица команд генома:
   - `commands[entityId][commandIndex][directionIndex]` → следующая команда
+- `Array<Color> entityColors[maxEntities]` — генетический цвет (BASE_COLOR), наследуется потомками с мутацией
 
 **Таблица команд:** 16 строк × 4 направления. Значение 0 = не расти в этом направлении.
 
@@ -221,11 +222,11 @@ STATE_NEW  (2)  — создан в этом тике, станет CURR на с
 |---------|----------|
 | `CreateCommand` | Создать сущность: ID + позиция + геном + энергия + возраст |
 | `GrowCommand` | Добавить клетку к сущности, списать ENERGY_TO_GROW |
-| `SeedToWoodCommand` | SEED_COMMAND → COMMAND_WOOD, цвет → PHOTOSYNTHESIS (зелёный) |
+| `SeedToWoodCommand` | SEED_COMMAND → COMMAND_WOOD, цвет → BASE_COLOR сущности |
 | `FallCommand` | Сдвинуть позицию вниз, COMMAND_FALL, очистить старую клетку |
 | `SeedOnGroundCommand` | COMMAND_FALL → START_COMMAND (готово к росту) |
 | `DestroySeedCommand` | Уничтожить семя при столкновении, освободить ID |
-| `DieCommand` | Древесина → пусто; семена → новые сущности с унаследованным геномом |
+| `DieCommand` | Древесина → пусто; семена → новые сущности с мутированным геномом и цветом |
 | `PhotosynthesisCommand` | `energy[id] += amount` |
 | `EnergySpendCommand` | `energy[id] -= amount` → возвращает новое значение |
 | `AgeUpCommand` | `age[id]++` → возвращает новое значение |
@@ -236,7 +237,8 @@ STATE_NEW  (2)  — создан в этом тике, станет CURR на с
 Для каждой клетки умирающей сущности:
   если COMMAND_WOOD → очистить (EMPTY_ID, COMMAND_EMPTY, BLACK)
   если seed → создать новую сущность:
-    - унаследует таблицу команд родителя
+    - наследует мутированную таблицу команд (MUTATION_RATE=3% на байт)
+    - наследует мутированный цвет (COLOR_MUTATION_RANGE=±3% на канал)
     - если Y == 0 → START_COMMAND (готова расти)
     - если Y > 0 → COMMAND_FALL (падает)
 Освободить родительский ID
