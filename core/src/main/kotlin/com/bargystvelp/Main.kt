@@ -21,7 +21,8 @@ class Main : ApplicationAdapter() {
 
     /** Создать мир и инициализировать рандомайзер. Вызывается LibGDX один раз при старте. */
     override fun create() {
-        Randomizer.init()
+        Randomizer.init(1773799528034)
+//        Randomizer.init()
 
         world = TreeWorld(Size(width = Gdx.graphics.width, height = Gdx.graphics.height))
     }

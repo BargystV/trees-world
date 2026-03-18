@@ -22,14 +22,6 @@ class EnergyComponent(
          * [directions] — массив направлений из таблицы команд генома.
          */
         fun hasEnoughEnergy(directions: ByteArray, id: Int, component: Component): Boolean {
-            var needEnergy = 0
-
-            directions.forEach { command ->
-                if (command == COMMAND_EMPTY) return@forEach
-
-                needEnergy += ENERGY_TO_GROW
-            }
-
             return component[ENERGY, id] >= ENERGY_TO_GROW
         }
     }

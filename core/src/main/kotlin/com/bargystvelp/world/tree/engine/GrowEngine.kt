@@ -35,12 +35,8 @@ object GrowEngine : Engine() {
         val energyComponent = world.components[ENERGY_COMPONENT_KEY] ?: return
 
         world.entityFactory.forEachExist { id ->
-//            if (id != 0) return@forEachExist
-
             val commands = genomeComponent[GenomeComponent.COMMANDS, id]
             val positions = positionComponent[PositionComponent.ID_TO_POS_LIST, id]
-
-//            if (!EnergyComponent.hasEnoughEnergy(energyComponent[EnergyComponent.ENERGY, id])) return@forEachExist
 
             for (packed in positions) {
                 val commandNumber = genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packed]
@@ -67,6 +63,7 @@ object GrowEngine : Engine() {
                         val newY = clamp(y + dy, world.biomeSize.height)
 
                         if (PositionComponent.isOccupied(newX, newY, positionComponent)) return@forEachIndexed
+                        if (energyComponent[EnergyComponent.ENERGY, id] < ENERGY_TO_GROW) return@forEachIndexed
 
                         GrowCommand.execute(
                             world = world,
