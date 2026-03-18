@@ -21,7 +21,16 @@ import com.bargystvelp.world.tree.component.MIN_AGE
 import com.bargystvelp.world.tree.component.PositionComponent
 import com.bargystvelp.world.tree.component.START_COMMAND
 
+/**
+ * Команда смерти дерева.
+ * Древесные клетки удаляются, семенные — становятся новыми сущностями с геномом родителя.
+ * ID родителя освобождается.
+ */
 object DieCommand {
+    /**
+     * Уничтожить сущность [id]: очистить древесину, создать дочерние сущности из семян,
+     * освободить ID родителя.
+     */
     fun execute(world: World, id: Int) {
         val positionComponent = world.components[POSITION_COMPONENT_KEY]    ?: return
         val genomeComponent   = world.components[GENOME_COMPONENT_KEY]      ?: return
@@ -49,6 +58,10 @@ object DieCommand {
     }
 
 
+    /**
+     * Создать новую сущность из семени родителя в позиции [packedPos],
+     * унаследовав таблицу команд [parentGenome].
+     */
     private fun createSeed(
         world: World,
         positionComponent: Component,
@@ -73,6 +86,7 @@ object DieCommand {
         ageComponent[AgeComponent.AGE, newId]          = MIN_AGE
     }
 
+    /** Очистить древесную клетку в позиции [packedPos]: убрать из позиций, сброс цвета. */
     private fun clearWood(positionComponent: Component, genomeComponent: Component, packedPos: Int) {
         /* ───── древесина: полностью очищаем ───── */
         positionComponent[PositionComponent.POS_TO_ID, packedPos]       = EMPTY_ID
@@ -81,6 +95,7 @@ object DieCommand {
     }
 
 
+    /** Определить начальную команду семени: START_COMMAND если Y==0, иначе COMMAND_FALL. */
     private fun getSeedCommand(packedPos: Int): Byte {
         return if (PositionUtils.unpackY(packedPos) == 0) {
             START_COMMAND

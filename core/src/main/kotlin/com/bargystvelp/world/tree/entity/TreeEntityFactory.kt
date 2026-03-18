@@ -8,6 +8,15 @@ private const val STATE_FREE: Byte = 0   // не используется
 private const val STATE_CURR: Byte = 1   // в основном списке (обрабатывается сейчас)
 private const val STATE_NEW:  Byte = 2   // создан в этом тике, будет первым в следующем
 
+/**
+ * Конкретная реализация фабрики сущностей для симуляции деревьев.
+ *
+ * Использует два двусвязных списка:
+ *  - основной (STATE_CURR) — сущности, обрабатываемые в текущем тике
+ *  - «новорождённые» (STATE_NEW) — созданы в этом тике, войдут в основной на следующем
+ *
+ * Стек свободных ID обеспечивает O(1) create/destroy без аллокаций.
+ */
 class TreeEntityFactory(private val maxEntities: Int) : EntityFactory {
 
     /* -------- внутренние массивы -------- */
@@ -32,6 +41,10 @@ class TreeEntityFactory(private val maxEntities: Int) : EntityFactory {
 
     /* =============================================== */
 
+    /**
+     * Выделить новый ID из стека свободных и добавить сущность в список «новорождённых».
+     * @throws IllegalStateException если нет свободных слотов
+     */
     override fun create(): Int {
         check(freeTop > 0) { "World is full" }
 
@@ -55,6 +68,7 @@ class TreeEntityFactory(private val maxEntities: Int) : EntityFactory {
 
 
 
+    /** Удалить сущность из активного списка и вернуть её ID в стек свободных. */
     override fun destroy(id: Int) {
         when (state[id]) {
             STATE_FREE  -> return                                           // уже свободен
@@ -68,6 +82,11 @@ class TreeEntityFactory(private val maxEntities: Int) : EntityFactory {
         free[freeTop++] = id
     }
 
+    /**
+     * Обойти все активные сущности.
+     * Сначала переносит «новорождённых» в основной список,
+     * затем итерирует, захватывая [next] ДО вызова колбэка (безопасное удаление).
+     */
     // --- замените метод целиком в TreeEntityFactory ---
     override fun forEachExist(block: (Int) -> Unit) {
         /* 1. Переводим накопленных «новорожденных» в начало основного списка */
@@ -103,6 +122,7 @@ class TreeEntityFactory(private val maxEntities: Int) : EntityFactory {
 
     /* =============================================== */
 
+    /** Исключить сущность [id] из двусвязного списка (основного или «новорождённых»). */
     private fun unlink(id: Int, fromNewborn: Boolean) {
         val p = prev[id]
         val n = next[id]

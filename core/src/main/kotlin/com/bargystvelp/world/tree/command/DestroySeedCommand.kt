@@ -16,7 +16,11 @@ import com.bargystvelp.world.tree.component.GenomeComponent
 import com.bargystvelp.world.tree.component.MIN_AGE
 import com.bargystvelp.world.tree.component.PositionComponent
 
+/** Команда уничтожения падающего семени при столкновении. Очищает все данные и освобождает ID. */
 object DestroySeedCommand {
+    /**
+     * Очистить позицию [packed], сбросить данные компонентов сущности [id] и уничтожить её.
+     */
     fun execute(world: World, id: Int, packed: Int) {
         val positionComponent = world.components[POSITION_COMPONENT_KEY]    ?: return
         val genomeComponent   = world.components[GENOME_COMPONENT_KEY]      ?: return

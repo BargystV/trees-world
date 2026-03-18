@@ -15,6 +15,12 @@ import com.bargystvelp.common.times
 import com.bargystvelp.logger.Logger
 import kotlin.math.min
 
+/**
+ * Рендерер симуляции деревьев на основе LibGDX SpriteBatch + Pixmap.
+ * Использует две текстуры:
+ *  - [cellsTexture] — однопиксельная белая текстура, масштабируется до размера клетки
+ *  - [gridTexture]  — кэшированная текстура сетки, рисуется поверх клеток
+ */
 class TreeRenderer(
     windowSize: Size,
     biomeSize: Size,
@@ -41,6 +47,7 @@ class TreeRenderer(
         CameraHandler.init(windowSize)
     }
 
+    /** Подготовить кадр: обработать ввод камеры, очистить экран, начать SpriteBatch. */
     override fun begin() {
         CameraHandler.instance.handle()
         spriteBatch.projectionMatrix = CameraHandler.instance.combined
@@ -51,6 +58,7 @@ class TreeRenderer(
         spriteBatch.begin()
     }
 
+    /** Нарисовать одну клетку заданным цветом в клеточных координатах (x, y). */
     override fun draw(x: Int, y: Int, color: Color) {
         spriteBatch.color = color
         spriteBatch.draw(
@@ -69,6 +77,7 @@ class TreeRenderer(
 //        )
     }
 
+    /** Завершить кадр: поверх клеток нарисовать сетку, закончить SpriteBatch. */
     override fun end() {
         // Отрисовка сетки
         spriteBatch.color = Color.DARK_GRAY
@@ -77,6 +86,7 @@ class TreeRenderer(
         spriteBatch.end()
     }
 
+    /** Освободить GPU-ресурсы: текстуры и SpriteBatch. */
     override fun dispose() {
         gridTexture.dispose()
         cellsTexture.dispose()
@@ -84,6 +94,7 @@ class TreeRenderer(
         spriteBatch.dispose()
     }
 
+    /** Создать текстуру сетки (линии через каждую клетку) для заданного размера биома. */
     private fun createGridTexture(biomeSize: Size, cellSize: Size): Texture {
         val windowSize = biomeSize.times(cellSize)
 
@@ -109,6 +120,7 @@ class TreeRenderer(
         return texture
     }
 
+    /** Создать однопиксельную белую текстуру для отрисовки клеток любого цвета. */
     private fun createCellsTexture(): Texture {
         val pixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888)
         pixmap.setColor(Color.WHITE)
@@ -121,7 +133,7 @@ class TreeRenderer(
         return texture
     }
 
-    //работает только на больших клетках
+    /** Создать растровый шрифт для отладочного вывода координат (работает только на крупных клетках). */
     private fun createBitmapFont(): BitmapFont {
         val generator = FreeTypeFontGenerator(Gdx.files.internal("RobotoMono-Regular.ttf"))
         val parameter = FreeTypeFontGenerator.FreeTypeFontParameter().apply {

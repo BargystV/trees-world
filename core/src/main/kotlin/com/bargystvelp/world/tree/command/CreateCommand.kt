@@ -14,7 +14,16 @@ import com.bargystvelp.world.tree.component.MIN_AGE
 import com.bargystvelp.world.tree.component.PositionComponent
 import com.bargystvelp.world.tree.component.START_COMMAND
 
+/** Команда создания новой сущности в указанной позиции с заданным геномом. */
 object CreateCommand {
+    /**
+     * Создать новую сущность: выделить ID, записать позицию, геном, энергию и возраст.
+     * @param packedPosition упакованная стартовая позиция
+     * @param commands       таблица команд генома
+     * @param seedCommand    начальная команда семени (по умолчанию START_COMMAND)
+     * @param color          начальный цвет клетки (по умолчанию WHITE)
+     * @param energy         начальная энергия (по умолчанию DEFAULT_ENERGY)
+     */
     fun execute(
         world: World,
         packedPosition: Int,

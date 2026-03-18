@@ -10,6 +10,15 @@ import com.bargystvelp.world.tree.command.GrowCommand
 import com.bargystvelp.world.tree.command.SeedToWoodCommand
 import com.bargystvelp.world.tree.component.*
 
+/**
+ * Движок роста деревьев.
+ * Для каждой активной семенной клетки читает таблицу команд генома
+ * и в свободные соседние клетки добавляет новые семена через [GrowCommand].
+ * После роста семя превращается в древесину через [SeedToWoodCommand].
+ *
+ * X-ось: торoidальное обёртывание (мир закольцован по горизонтали).
+ * Y-ось: clamped к [0, height-1] (мир ограничен по вертикали).
+ */
 object GrowEngine : Engine() {
     private val DIRECTIONS = mapOf(
         LEFT to Delta(-1, 0),
@@ -19,6 +28,7 @@ object GrowEngine : Engine() {
     )
 
 
+    /** Выполнить рост для всех живых сущностей. */
     override fun tick(world: World, delta: Float) {
         val positionComponent = world.components[POSITION_COMPONENT_KEY] ?: return
         val genomeComponent = world.components[GENOME_COMPONENT_KEY] ?: return
@@ -76,7 +86,7 @@ object GrowEngine : Engine() {
         }
     }
 
-    /** Обёртка 0‥size-1 (тор). */
+    /** Обернуть координату по модулю [size] (тор по X). */
     private fun wrap(c: Int, size: Int): Int =
         when {
             c >= size -> c - size
@@ -84,7 +94,7 @@ object GrowEngine : Engine() {
             else -> c
         }
 
-    /** Ограничение 0‥size-1 (зажим). */
+    /** Зажать координату в диапазон [0, size-1] (граница по Y). */
     private fun clamp(c: Int, size: Int): Int =
         when {
             c >= size -> size - 1
@@ -92,5 +102,6 @@ object GrowEngine : Engine() {
             else -> c
         }
 
+    /** Смещение координат для одного направления роста. */
     private data class Delta(val dx: Int, val dy: Int)
 }

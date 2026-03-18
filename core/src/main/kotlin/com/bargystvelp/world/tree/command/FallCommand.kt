@@ -12,7 +12,12 @@ import com.bargystvelp.world.tree.component.EMPTY_ID
 import com.bargystvelp.world.tree.component.GenomeComponent
 import com.bargystvelp.world.tree.component.PositionComponent
 
+/** Команда перемещения падающего семени на одну клетку вниз. */
 object FallCommand {
+    /**
+     * Переместить семя сущности [id] с позиции [fromPosition] на [toPosition].
+     * Очищает старую позицию, обновляет новую.
+     */
     fun execute(world: World, id: Int, fromPosition: Int, toPosition: Int) {
         val positionComponent = world.components[POSITION_COMPONENT_KEY] ?: return
         val genomeComponent = world.components[GENOME_COMPONENT_KEY] ?: return

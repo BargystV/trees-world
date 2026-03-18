@@ -23,6 +23,14 @@ val EMPTY_DIRECTIONS = ByteArray(DIRECTIONS_SIZE) { COMMAND_EMPTY }
 val EMPTY_COMMANDS   = Array(COMMAND_SIZE) { EMPTY_DIRECTIONS }
 
 /* ─────────────── компонент ─────────────── */
+/**
+ * Компонент генома сущностей.
+ * Хранит:
+ *  - [seeds]    — команда-тип каждой клетки на сетке (по packed-позиции)
+ *  - [colors]   — цвет каждой клетки на сетке (по packed-позиции)
+ *  - [commands] — таблица команд генома для каждой сущности (по entity ID):
+ *                 commands[id][commandIndex][directionIndex] → следующая команда
+ */
 class GenomeComponent(
     private val maxEntities: Int,
     private val width: Int,
@@ -45,6 +53,7 @@ class GenomeComponent(
 
 
     /* ───────────── Component API ───────────── */
+    /** Записать значение атрибута. Поддерживает [SEED_COMMAND_AT_POS], [COMMANDS], [COLOR_AT_POS]. */
     @Suppress("UNCHECKED_CAST")
     override fun <K, V : Any> set(type: AttrKey<K, V>, key: K, value: V) {
         when (type) {
@@ -55,6 +64,7 @@ class GenomeComponent(
         }
     }
 
+    /** Прочитать значение атрибута. Поддерживает [SEED_COMMAND_AT_POS], [COMMANDS], [COLOR_AT_POS]. */
     @Suppress("UNCHECKED_CAST")
     override fun <K, V : Any> get(type: AttrKey<K, V>, key: K): V =
         when (type) {

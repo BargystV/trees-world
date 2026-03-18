@@ -9,7 +9,9 @@ import com.bargystvelp.world.tree.component.COMMAND_EMPTY
 import com.bargystvelp.world.tree.component.COMMAND_WOOD
 import com.bargystvelp.world.tree.component.GenomeComponent
 
+/** Команда превращения семени в древесину: меняет команду на COMMAND_WOOD и цвет на PHOTOSYNTHESIS. */
 object SeedToWoodCommand {
+    /** Превратить семенную клетку в позиции [packedPosition] в древесную. */
     fun execute(world: World, packedPosition: Int) {
         val genomeComponent = world.components[GENOME_COMPONENT_KEY] ?: return
 

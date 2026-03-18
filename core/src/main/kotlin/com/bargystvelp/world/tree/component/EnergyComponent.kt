@@ -6,12 +6,21 @@ import com.bargystvelp.common.Component
 const val DEFAULT_ENERGY = 300
 const val ENERGY_TO_GROW = 18
 
+/**
+ * Компонент энергии сущностей.
+ * Хранит запас энергии каждой сущности в IntArray.
+ * Энергия тратится на рост ([ENERGY_TO_GROW] за клетку) и содержание древесины.
+ */
 class EnergyComponent(
     private val maxEntities: Int
 ): Component {
     companion object {
         val ENERGY = AttrKey<Int, Int>(0)
 
+        /**
+         * Проверить, хватает ли энергии сущности [id] хотя бы на один рост.
+         * [directions] — массив направлений из таблицы команд генома.
+         */
         fun hasEnoughEnergy(directions: ByteArray, id: Int, component: Component): Boolean {
             var needEnergy = 0
 
@@ -28,6 +37,7 @@ class EnergyComponent(
     private val energies = IntArray(maxEntities) { DEFAULT_ENERGY }
 
     /* ───────────── Component API ───────────── */
+    /** Записать значение атрибута. Поддерживает только [ENERGY]. */
     @Suppress("UNCHECKED_CAST")
     override fun <K, V : Any> set(type: AttrKey<K, V>, key: K, value: V) {
         when (type) {
@@ -36,6 +46,7 @@ class EnergyComponent(
         }
     }
 
+    /** Прочитать значение атрибута. Поддерживает только [ENERGY]. */
     @Suppress("UNCHECKED_CAST")
     override fun <K, V : Any> get(type: AttrKey<K, V>, key: K): V =
         when (type) {

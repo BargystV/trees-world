@@ -28,6 +28,11 @@ const val GENOME_COMPONENT_KEY      = "GENOME"
 const val ENERGY_COMPONENT_KEY      = "ENERGY"
 const val AGE_COMPONENT_KEY         = "AGE"
 
+/**
+ * Конкретная реализация мира симуляции деревьев.
+ * Создаёт и связывает все компоненты ECS: рендерер, движки, фабрику сущностей, компоненты.
+ * При инициализации помещает первую сущность («Адам») в центр нижнего края.
+ */
 class TreeWorld(
     windowSize: Size,
     cellSize: Size = Size(width = 10, height = 10),
@@ -61,6 +66,7 @@ class TreeWorld(
         }
     }
 
+    /** Выполнить один тик: запустить все движки по порядку (Photosynthesis → Mortal → Fall → Grow). */
     override fun tick(delta: Float) {
         engines.forEach { engine ->
             engine.tick(this, delta)
@@ -72,6 +78,7 @@ class TreeWorld(
 //        }
     }
 
+    /** Отрисовать все живые сущности: для каждой клетки берёт цвет из GenomeComponent. */
     override fun render(delta: Float) {
         renderer.begin()
 
@@ -94,6 +101,10 @@ class TreeWorld(
     }
 
 
+    /**
+     * Сгенерировать случайную таблицу команд генома для первой сущности («Адама»).
+     * START_COMMAND[DOWN] всегда = COMMAND_EMPTY (семя не растёт вниз).
+     */
     private fun createAdamCommands(): Array<ByteArray> {
         val commands: Array<ByteArray> = Array(COMMAND_SIZE) {
             ByteArray(DIRECTIONS_SIZE) { COMMAND_EMPTY }

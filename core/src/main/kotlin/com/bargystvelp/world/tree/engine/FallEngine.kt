@@ -19,6 +19,12 @@ import com.bargystvelp.world.tree.component.PositionComponent
  *   • столкнутся с существом / другим семенем → SeedDestroyCommand
  */
 object FallEngine : Engine() {
+    /**
+     * Обработать падение всех семян с маркером [COMMAND_FALL]:
+     *  - столкновение снизу → [DestroySeedCommand]
+     *  - Y == 1 (следующий шаг — земля) → [SeedOnGroundCommand]
+     *  - иначе → [FallCommand] (сдвинуть вниз)
+     */
     override fun tick(world: World, delta: Float) {
         val positionComponent = world.components[POSITION_COMPONENT_KEY] ?: return
         val genomeComponent = world.components[GENOME_COMPONENT_KEY] ?: return

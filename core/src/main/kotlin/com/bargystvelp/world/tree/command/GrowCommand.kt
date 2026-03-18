@@ -13,7 +13,12 @@ import com.bargystvelp.world.tree.component.GenomeComponent
 import com.bargystvelp.world.tree.component.PositionComponent
 import com.bargystvelp.world.tree.component.START_COMMAND
 
+/** Команда роста: добавить новую семенную клетку к существующей сущности. */
 object GrowCommand {
+    /**
+     * Добавить клетку в позицию [packedPosition] для сущности [id].
+     * Списывает [ENERGY_TO_GROW] энергии. Устанавливает команду [seedCommand] и цвет [color].
+     */
     fun execute(
         world: World,
         id: Int,

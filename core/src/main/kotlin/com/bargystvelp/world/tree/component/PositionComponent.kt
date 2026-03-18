@@ -8,8 +8,13 @@ const val EMPTY_ID = -1
 const val NO_POS = -1                     // sentinel for end-of-list
 
 /**
- * id ↔︎ positions (multi-pos per tree) storage on pure primitives.
- * All hot-path ops are O(1) and alloc-free.
+ * Компонент позиций сущностей.
+ * Каждая сущность может занимать несколько клеток (тело дерева).
+ * Хранение — двусвязные списки на примитивных массивах; все операции O(1), без аллокаций.
+ *
+ * Ключевые операции:
+ *  - [POS_TO_ID]      — позиция → entity ID (или [EMPTY_ID])
+ *  - [ID_TO_POS_LIST] — entity ID → список всех занятых позиций
  */
 class PositionComponent(
     private val maxEntities: Int,
@@ -23,6 +28,7 @@ class PositionComponent(
         /** packedPos → id (or EMPTY_ID) */
         val POS_TO_ID      = AttrKey<Int, Int>(1)
 
+        /** Проверить, занята ли клетка (x, y) любой сущностью. */
         fun isOccupied(x: Int, y: Int, pc: Component): Boolean =
             pc[POS_TO_ID, PositionUtils.pack(x, y)] != EMPTY_ID
     }
@@ -61,7 +67,7 @@ class PositionComponent(
 
     /* ─────────── core ops ─────────── */
 
-    /** id ⇢ packedPos (add / re-assign). */
+    /** Привязать позицию [packed] к сущности [id] (добавить в её список). */
     private fun addPosition(id: Int, packed: Int) {
         validateId(id); validatePackedForWrite(packed)
         val idx = PositionUtils.idx(packed, width)
@@ -71,7 +77,7 @@ class PositionComponent(
         linkPosition(id, idx)
     }
 
-    /** packedPos ⇢ EMPTY_ID.  No-op if already empty. */
+    /** Освободить позицию [packed] (удалить из списка владельца). */
     private fun removePosition(packed: Int) {
         validatePackedForWrite(packed)
         val idx = PositionUtils.idx(packed, width)
@@ -79,7 +85,7 @@ class PositionComponent(
         if (owner != EMPTY_ID) unlinkPosition(owner, idx)
     }
 
-    /** Replace whole body of tree `id`. */
+    /** Полностью заменить список позиций сущности [id] новым списком [newList]. */
     private fun replacePositions(id: Int, newList: IntArray) {
         validateId(id)
         // validate new cells & duplicates
@@ -107,7 +113,7 @@ class PositionComponent(
         for (p in newList) addPosition(id, p)
     }
 
-    /** Packed positions of tree `id` (returns new array). */
+    /** Вернуть массив всех упакованных позиций сущности [id] (новый массив каждый раз). */
     private fun positionsOf(id: Int): IntArray {
         validateId(id)
         val out = IntArray(idCount[id])
@@ -120,7 +126,7 @@ class PositionComponent(
         return out
     }
 
-    /** id at cell or EMPTY_ID (out-of-board safe). */
+    /** Вернуть ID сущности в клетке [packed], или [EMPTY_ID] если клетка вне поля или пуста. */
     private fun getIdAtPacked(packed: Int): Int {
         val x = PositionUtils.unpackX(packed)
         val y = PositionUtils.unpackY(packed)
@@ -130,6 +136,7 @@ class PositionComponent(
 
     /* ─────────── list helpers ─────────── */
 
+    /** Исключить позицию [idx] из двусвязного списка владельца [ownerId]. */
     private fun unlinkPosition(ownerId: Int, idx: Int) {
         val prev = prevPos[idx]
         val next = nextPos[idx]
@@ -143,6 +150,7 @@ class PositionComponent(
         idCount[ownerId]--
     }
 
+    /** Включить позицию [idx] в начало двусвязного списка сущности [id]. */
     private fun linkPosition(id: Int, idx: Int) {
         val head = idHead[id]
         posToId[idx] = id
@@ -155,9 +163,11 @@ class PositionComponent(
 
     /* ─────────── validation ─────────── */
 
+    /** Проверить корректность entity ID. */
     private fun validateId(id: Int) =
         require(id in 0 until maxEntities) { "id $id out of range [0, ${maxEntities - 1}]" }
 
+    /** Проверить, что упакованная позиция находится в пределах сетки. */
     private fun validatePackedForWrite(packed: Int) {
         val x = PositionUtils.unpackX(packed)
         val y = PositionUtils.unpackY(packed)

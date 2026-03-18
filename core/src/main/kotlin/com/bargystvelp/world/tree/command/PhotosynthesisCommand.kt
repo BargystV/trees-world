@@ -4,7 +4,9 @@ import com.bargystvelp.common.World
 import com.bargystvelp.world.tree.ENERGY_COMPONENT_KEY
 import com.bargystvelp.world.tree.component.EnergyComponent
 
+/** Команда начисления энергии фотосинтеза сущности. */
 object PhotosynthesisCommand {
+    /** Добавить [energy] единиц к запасу энергии сущности [id]. */
     fun execute(
         world: World,
         id: Int,

@@ -6,6 +6,11 @@ import com.bargystvelp.common.Component
 const val MAX_AGE = 100
 const val MIN_AGE = 0
 
+/**
+ * Компонент возраста сущностей.
+ * Хранит возраст каждой сущности в IntArray, индексируемом по entity ID.
+ * При достижении [MAX_AGE] MortalEngine запускает смерть сущности.
+ */
 class AgeComponent(
     private val maxEntities: Int
 ): Component {
@@ -16,6 +21,7 @@ class AgeComponent(
     private val ages = IntArray(maxEntities) { MIN_AGE }
 
     /* ───────────── Component API ───────────── */
+    /** Записать значение атрибута. Поддерживает только [AGE]. */
     @Suppress("UNCHECKED_CAST")
     override fun <K, V : Any> set(type: AttrKey<K, V>, key: K, value: V) {
         when (type) {
@@ -24,6 +30,7 @@ class AgeComponent(
         }
     }
 
+    /** Прочитать значение атрибута. Поддерживает только [AGE]. */
     @Suppress("UNCHECKED_CAST")
     override fun <K, V : Any> get(type: AttrKey<K, V>, key: K): V =
         when (type) {

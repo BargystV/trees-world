@@ -15,10 +15,16 @@ import com.bargystvelp.world.tree.component.MAX_AGE
 import com.bargystvelp.world.tree.component.PositionComponent
 import kotlin.collections.forEach
 
+/**
+ * Движок смертности.
+ * Каждый тик увеличивает возраст сущностей и списывает энергию за содержание древесины.
+ * При исчерпании энергии или достижении [MAX_AGE] запускает [DieCommand].
+ */
 object MortalEngine : Engine() {
 
     private const val WOOD_COST = 4
 
+    /** Обработать старение и расход энергии для всех живых сущностей. */
     override fun tick(world: World, delta: Float) {
         val positionComponent   = world.components[POSITION_COMPONENT_KEY]  ?: return
         val genomeComponent     = world.components[GENOME_COMPONENT_KEY]    ?: return
@@ -38,6 +44,10 @@ object MortalEngine : Engine() {
         }
     }
 
+    /**
+     * Списать энергию за все древесные клетки сущности [id].
+     * @return false, если энергия исчерпана (нужна смерть)
+     */
     private fun energyProcessing(world: World, positionComponent: Component, genomeComponent: Component, id: Int): Boolean {
         var energyCost = 0
 
@@ -58,6 +68,10 @@ object MortalEngine : Engine() {
         return if (energy == null) true else energy > 0
     }
 
+    /**
+     * Увеличить возраст сущности [id] на 1.
+     * @return false, если достигнут [MAX_AGE] (нужна смерть)
+     */
     private fun ageProcessing(world: World, id: Int): Boolean {
         val age: Int? = AgeUpCommand.execute(world, id)
         return age != null && age < MAX_AGE

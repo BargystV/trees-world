@@ -10,17 +10,23 @@ import com.bargystvelp.logger.Logger
 import com.bargystvelp.logger.MeasureUtil
 import com.bargystvelp.util.Randomizer
 
+/**
+ * Точка входа LibGDX-приложения.
+ * Инициализирует мир симуляции и запускает основной цикл render/tick.
+ */
 class Main : ApplicationAdapter() {
     private lateinit var world: World
 
     private var renderCount: Int = 0
 
+    /** Создать мир и инициализировать рандомайзер. Вызывается LibGDX один раз при старте. */
     override fun create() {
         Randomizer.init()
 
         world = TreeWorld(Size(width = Gdx.graphics.width, height = Gdx.graphics.height))
     }
 
+    /** Основной цикл: рендер + тик симуляции каждый кадр. */
     override fun render() {
 //        Logger.info("${renderCount++}")
 
@@ -35,8 +41,7 @@ class Main : ApplicationAdapter() {
 //        }
     }
 
-
-    // Очистка ресурсов
+    /** Освободить все ресурсы при закрытии приложения. */
     override fun dispose() {
         Logger.info("")
 
