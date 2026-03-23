@@ -33,12 +33,12 @@ object MortalEngine : Engine() {
 //            if (id != 0) return@forEachExist
 
             if (!ageProcessing(world, id)) {
-                DieCommand.execute(world, id)
+                DieCommand.execute(world, id, propagateSeeds = true)
                 return@forEachExist
             }
 
             if (!energyProcessing(world, positionComponent, genomeComponent, id)) {
-                DieCommand.execute(world, id)
+                DieCommand.execute(world, id, propagateSeeds = false)
                 return@forEachExist
             }
         }

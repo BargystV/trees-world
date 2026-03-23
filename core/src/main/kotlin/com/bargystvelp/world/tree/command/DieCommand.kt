@@ -32,15 +32,17 @@ private const val COLOR_MUTATION_RANGE = 0.06f
 
 /**
  * Команда смерти дерева.
- * Древесные клетки удаляются, семенные — становятся новыми сущностями с мутированным геномом родителя.
+ * Древесные клетки удаляются, семенные — становятся новыми сущностями с мутированным геномом родителя
+ * только если [propagateSeeds] == true (смерть от старости). При смерти от нехватки энергии семена тоже удаляются.
  * ID родителя освобождается.
  */
 object DieCommand {
     /**
-     * Уничтожить сущность [id]: очистить древесину, создать дочерние сущности из семян,
+     * Уничтожить сущность [id]: очистить древесину, при [propagateSeeds]=true — создать дочерние сущности из семян,
      * освободить ID родителя.
+     * @param propagateSeeds true — семена становятся потомками (смерть от старости); false — все клетки удаляются.
      */
-    fun execute(world: World, id: Int) {
+    fun execute(world: World, id: Int, propagateSeeds: Boolean = true) {
         val positionComponent = world.components[POSITION_COMPONENT_KEY]    ?: return
         val genomeComponent   = world.components[GENOME_COMPONENT_KEY]      ?: return
         val energyComponent   = world.components[ENERGY_COMPONENT_KEY]      ?: return
@@ -52,7 +54,7 @@ object DieCommand {
         val parentColor  = genomeComponent[GenomeComponent.BASE_COLOR, id]
 
         cells.forEach { packedPos ->
-            if (genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packedPos] == COMMAND_WOOD) {
+            if (genomeComponent[GenomeComponent.SEED_COMMAND_AT_POS, packedPos] == COMMAND_WOOD || !propagateSeeds) {
                 clearWood(positionComponent, genomeComponent, packedPos)
             } else {
                 createSeed(world, positionComponent, genomeComponent, energyComponent, ageComponent, packedPos, parentGenome, parentColor)
