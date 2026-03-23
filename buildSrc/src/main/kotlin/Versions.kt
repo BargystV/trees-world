@@ -3,7 +3,7 @@ object Versions {
     const val graalHelper = "2.0.1"
     const val gdx = "1.13.1"
     const val project = "1.0.0"
-    const val appName = "ai-game"
+    const val appName = "simulation-of-life"
 
     const val enableGraalNative = false // Было строкой — заменено на булево
 }
