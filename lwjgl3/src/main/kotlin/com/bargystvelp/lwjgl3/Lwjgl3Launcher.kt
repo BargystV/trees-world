@@ -25,7 +25,7 @@ object Lwjgl3Launcher {
 
     private val defaultConfiguration: Lwjgl3ApplicationConfiguration
         get() = Lwjgl3ApplicationConfiguration().apply {
-            setTitle("SimulationOfLife")
+            setTitle("TreesWorld")
             useVsync(true)
             setForegroundFPS(60)
             setDecorated(false)          // нужна рамка

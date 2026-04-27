@@ -64,7 +64,7 @@ configure(subprojects) {
 
 subprojects {
   version = "${Versions.project}"
-  ext.appName = 'simulation-of-life'
+  ext.appName = 'trees-world'
   repositories {
     mavenCentral()
     maven { url 'https://s01.oss.sonatype.org' }
@@ -76,4 +76,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'simulation-of-life' + '-parent'
+eclipse.project.name = 'trees-world' + '-parent'
